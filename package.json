@@ -1,0 +1,31 @@
+{
+  "name": "field-assist",
+  "version": "1.0.0",
+  "description": "Making reading of input fields easy and  fun",
+  "main": "lib/relative-time.js",
+  "types": "lib/relative-time.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "prepare": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dharmax/field-assist.git"
+  },
+  "keywords": [
+    "fields",
+    "form",
+    "reading",
+    "input"
+  ],
+  "author": "Avi Tshuva, dharmax",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dharmax/field-assist/issues"
+  },
+  "homepage": "https://github.com/dharmax/field-assist",
+  "devDependencies": {
+    "typescript": "^4.0.5"
+  }
+}
