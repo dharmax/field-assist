@@ -1,31 +1,3 @@
-/**
- *
- * @param node start search node
- * @param keyFieldName optional alternative reference field name
- * @return array of elements that have the "ref" attribute
- */
-export function refs(node: Element, keyFieldName = 'ref'): HTMLInputElement[] {
-    const nodes = node.querySelectorAll(`[${keyFieldName}]`)
-    // @ts-ignore
-    return Array.of(...nodes) as HTMLInputElement[]
-}
-
-/**
- * @return elements map by the ref name
- * @param node
- * @param keyFieldName optional alternative reference field name
- */
-export function refNodes(node: Element, keyFieldName = 'ref'): { [ref: string]: HTMLInputElement } {
-
-    const map: { [ref: string]: HTMLInputElement } = {}
-    const elements = refs(node, keyFieldName)
-    elements.reduce((a, c: HTMLElement) => {
-        // @ts-ignore
-        a[c.getAttribute('ref')] = c
-        return a
-    }, map)
-    return map
-}
 
 /**
  * Looks for elements with the "ref" (or whatever other  attribute then returns a map with the values
@@ -51,7 +23,7 @@ export function collectValues(node: Element, context?: any, keyFieldName = 'ref'
                 e.nodeValue || e.getAttribute('value') || e['value'] || e.textContent
 
         const customValidator = e.getAttribute('validator')
-        let isValid = true
+        let isValid
         if (customValidator) {
             const validationFunction = eval(customValidator.toString());
             isValid = validationFunction(value, context)
@@ -78,6 +50,50 @@ export function collectValues(node: Element, context?: any, keyFieldName = 'ref'
             values.push(n.getAttribute('value')))
         return values
     }
+}
+
+/**
+ *
+ * @param node start search node
+ * @param keyFieldName optional alternative reference field name
+ * @return array of elements that have the "ref" attribute
+ */
+export function refs(node: Element, keyFieldName = 'ref'): HTMLInputElement[] {
+    const nodes = node.querySelectorAll(`[${keyFieldName}]`)
+    // @ts-ignore
+    return Array.of(...nodes) as HTMLInputElement[]
+}
+
+/**
+ * @return elements map by the ref name
+ * @param node
+ * @param keyFieldName optional alternative reference field name
+ */
+export function refNodes(node: Element, keyFieldName = 'ref'): { [ref: string]: HTMLInputElement } {
+
+    const map: { [ref: string]: HTMLInputElement } = {}
+    const elements = refs(node, keyFieldName)
+    elements.reduce((a, c: HTMLElement) => {
+        // @ts-ignore
+        a[c.getAttribute(keyFieldName)] = c
+        return a
+    }, map)
+    return map
+}
+
+/**
+ * Utility method that let you get the field name and value of the input field that is associated with an event
+ * @param event the event
+ * @param context optional context for the collectValue inner call
+ * @param keyFieldName optional alternative to the "ref" attribute name
+ */
+export function getFieldAndValue(event: Event, context?: any, keyFieldName = 'ref'): { field: string, value: any } {
+    let target = event.target as HTMLElement;
+    if (!target.getAttribute(keyFieldName))
+        target = target.parentNode as HTMLElement
+    const fieldName = target.getAttribute(keyFieldName) as string
+    const values = collectValues(target, context, keyFieldName)
+    return {field: fieldName, value: values[fieldName]};
 }
 
 export const Invalid = Symbol('Invalid')
