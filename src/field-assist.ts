@@ -1,23 +1,26 @@
-
 /**
  *
  * @param node start search node
+ * @param keyFieldName optional alternative reference field name
  * @return array of elements that have the "ref" attribute
  */
-export function refs(node: Element): HTMLInputElement[] {
-    const nodes = node.querySelectorAll('[ref]')
+export function refs(node: Element, keyFieldName = 'ref'): HTMLInputElement[] {
+    const nodes = node.querySelectorAll(`[${keyFieldName}]`)
     // @ts-ignore
-    return (Array.of(...nodes) as HTMLInputElement[])
+    return Array.of(...nodes) as HTMLInputElement[]
 }
 
 /**
  * @return elements map by the ref name
  * @param node
+ * @param keyFieldName optional alternative reference field name
  */
-export function refNodes(node: Element): { [ref: string]: HTMLInputElement } {
+export function refNodes(node: Element, keyFieldName = 'ref'): { [ref: string]: HTMLInputElement } {
 
-    const map = {}
-    refs(node).reduce((a, c) => {
+    const map: { [ref: string]: HTMLInputElement } = {}
+    const elements = refs(node, keyFieldName)
+    elements.reduce((a, c: HTMLElement) => {
+        // @ts-ignore
         a[c.getAttribute('ref')] = c
         return a
     }, map)
@@ -25,21 +28,24 @@ export function refNodes(node: Element): { [ref: string]: HTMLInputElement } {
 }
 
 /**
- * Looks for elements with the "ref" attribute then returns a map with the values
+ * Looks for elements with the "ref" (or whatever other  attribute then returns a map with the values
  * inside those elements, with the string in the "ref" as the name.
  * It also mark invalid values with Invalid symbol.
  *
  * @return the fields and _errors field with the list of erroneous values
  * @param node start node to look within
+ * @param context an optional context object that will be injected into a custom validator
+ * @param keyFieldName optional alternative reference field name
  */
-export function collectValues(node: Element, context?): { [k: string]: any } {
+export function collectValues(node: Element, context?: any, keyFieldName = 'ref'): { [k: string]: any } {
 
-    const nodes = refs(node)
+    const nodes = refs(node, keyFieldName)
     const errors = {}
 
-    const results: any = nodes.reduce((a, e) => {
+    const results: any = nodes.reduce((a: any, e) => {
         const fieldName = e.getAttribute('ref')
-
+        if (!fieldName)
+            return
         const value = e.type == "select-multiple" ? getMultiSelect(e) :
             e.type == 'checkbox' ? e.checked :
                 e.nodeValue || e.getAttribute('value') || e['value'] || e.textContent
@@ -56,6 +62,7 @@ export function collectValues(node: Element, context?): { [k: string]: any } {
             a[fieldName] = value
         else {
             a[fieldName] = Invalid
+            // @ts-ignore
             errors[fieldName] = value
         }
 
@@ -65,10 +72,12 @@ export function collectValues(node: Element, context?): { [k: string]: any } {
         results._errors = errors
     return results
 
-    function getMultiSelect(e) {
-        const values = []
+    function getMultiSelect(e: HTMLElement) {
+        const values: any = []
         e.querySelectorAll('option:checked').forEach(n =>
             values.push(n.getAttribute('value')))
         return values
     }
 }
+
+export const Invalid = Symbol('Invalid')
