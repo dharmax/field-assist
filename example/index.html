@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Example</title>
+</head>
+<body>
+
+<form>
+    <label>Display Name:
+        <input ref="name" type="text">
+    </label>
+    <div class="bio">
+        <label>About myself</label><br>
+        <textarea ref="generalBio" cols="30" rows="10"></textarea>
+    </div>
+    <div class="main-language">
+        <label>Main Language
+            <select autocomplete="on" ref="preferredLanguage">
+                <option value="English">English</option>
+                <option value="German">German</option>
+                <option value="French">French</option>
+            </select>
+        </label>
+    </div>
+</form>
+</body>
+<script type="module">
+    import {populateFields} from "../lib/field-assist.js";
+
+    const values = {
+        name: 'Albert Einstein',
+        generalBio: 'I was a cool genius',
+        preferredLanguage: 'German',
+
+    }
+
+    populateFields(document.body, values)
+    document.body.oninput = (event) => {
+
+    }
+
+</script>
+
+
+</body>
+</html>
