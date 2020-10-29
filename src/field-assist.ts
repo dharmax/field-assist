@@ -39,7 +39,7 @@ export function collectValues(node: Element, context?: any, keyFieldName = 'ref'
         else {
             a[fieldName] = Invalid
             // @ts-ignore
-            errors[fieldName] = value
+            errors[fieldName] = {value, element}
         }
 
         return a

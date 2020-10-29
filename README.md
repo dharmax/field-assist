@@ -39,9 +39,9 @@ it uses the same logic, but it finds the input element that was just changed, so
 of all the values. Pretty useful.  
 
 # example      
-See full example in a single web-page under the example directory.
+See full example in a single web-page under the example directory. No need for a server to run it. 
 
 # disclaimer 
-This library provided as-is, with absolutely no gouranty 
+This library provided as-is, with absolutely no guarantee. Enjoy, support, etc....  
 
 ```

@@ -7,7 +7,7 @@
 <body>
 
 <section class="form">
-    <label>Display Name:
+    <label>Display Name: (english alpha only)
         <input ref="name" type="text" pattern="[a-zA-Z ]*">
     </label>
     <div class="bio">
@@ -24,15 +24,18 @@
             </select>
         </label>
     </div>
-    <button>Send All</button>
+    <p>
+        <button>Send All</button>
+    </p>
     <label class="errors">
         Illegal values:
-        <div id="errors"></div>
+        <pre id="errors"></pre>
     </label>
 </section>
 </body>
 <style>
     section.form {
+        margin: 5em;
         display: flex;
         flex-direction: column;
 
@@ -62,12 +65,25 @@
     }
 
     populateFields(document.body, values)
+    showErrors()
+
+    function showErrors() {
+        // this is errors display example
+        const errorDiv = document.getElementById('errors')
+        const errors = collectValues(document.body)._errors
+        if (errors) {
+            errorDiv.parentElement.style.visibility = 'visible'
+            errorDiv.textContent = JSON.stringify(errors, undefined, 2)
+        } else {
+            errorDiv.parentElement.style.visibility = 'hidden'
+        }
+    }
+
     document.body.oninput = (event) => {
-        // this option updates a single field:
+        // this option used to update a single field - just what was changed
         const {field, value} = getFieldAndValue(event);
         console.dir({[field]: value})
-
-        document.getElementById('errors').textContent = JSON.stringify(collectValues(document.body)._errors, ' ')
+        showErrors();
 
     }
     document.body.querySelector('button').onclick = () => {
