@@ -1,3 +1,18 @@
+function normalizeValue(e: HTMLInputElement, context: any) {
+    const value = e.type == "select-multiple" ? getMultiSelect(e) :
+        e.type == 'checkbox' ? e.checked :
+            e.nodeValue || e.getAttribute('value') || e['value'] || e.textContent
+
+    const customValidator = e.getAttribute('validator')
+    let isValid
+    if (customValidator) {
+        const validationFunction = eval(customValidator.toString());
+        isValid = validationFunction(value, context)
+    } else
+        isValid = !e.validity || e.validity.valid
+    return {value, isValid};
+}
+
 /**
  * Looks for elements with the "ref" (or whatever other  attribute then returns a map with the values
  * inside those elements, with the string in the "ref" as the name.
@@ -13,21 +28,11 @@ export function collectValues(node: Element, context?: any, keyFieldName = 'ref'
     const nodes = refs(node, keyFieldName)
     const errors = {}
 
-    const results: any = nodes.reduce((a: any, e) => {
-        const fieldName = e.getAttribute('ref')
+    const results: any = nodes.reduce((a: any, element) => {
+        const fieldName = element.getAttribute(keyFieldName)
         if (!fieldName)
             return
-        const value = e.type == "select-multiple" ? getMultiSelect(e) :
-            e.type == 'checkbox' ? e.checked :
-                e.nodeValue || e.getAttribute('value') || e['value'] || e.textContent
-
-        const customValidator = e.getAttribute('validator')
-        let isValid
-        if (customValidator) {
-            const validationFunction = eval(customValidator.toString());
-            isValid = validationFunction(value, context)
-        } else
-            isValid = !e.validity || e.validity.valid
+        const {value, isValid} = normalizeValue(element, context);
 
         if (isValid)
             a[fieldName] = value
@@ -43,12 +48,13 @@ export function collectValues(node: Element, context?: any, keyFieldName = 'ref'
         results._errors = errors
     return results
 
-    function getMultiSelect(e: HTMLElement) {
-        const values: any = []
-        e.querySelectorAll('option:checked').forEach(n =>
-            values.push(n.getAttribute('value')))
-        return values
-    }
+}
+
+function getMultiSelect(e: HTMLElement) {
+    const values: any = []
+    e.querySelectorAll('option:checked').forEach(n =>
+        values.push(n.getAttribute('value')))
+    return values
 }
 
 /**
@@ -91,7 +97,7 @@ export function getFieldAndValue(event: Event, context?: any, keyFieldName = 're
     if (!target.getAttribute(keyFieldName))
         target = target.parentNode as HTMLElement
     const fieldName = target.getAttribute(keyFieldName) as string
-    const values = collectValues(target, context, keyFieldName)
+    const values = collectValues(target.parentNode, keyFieldName, context, keyFieldName)
     return {field: fieldName, value: values[fieldName]};
 }
 

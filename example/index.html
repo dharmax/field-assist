@@ -6,13 +6,14 @@
 </head>
 <body>
 
-<form>
+<section class="form">
     <label>Display Name:
         <input ref="name" type="text">
     </label>
     <div class="bio">
-        <label>About myself</label><br>
-        <textarea ref="generalBio" cols="30" rows="10"></textarea>
+        <label>About myself
+            <textarea ref="generalBio" cols="30" rows="10"></textarea>
+        </label><br>
     </div>
     <div class="main-language">
         <label>Main Language
@@ -23,10 +24,12 @@
             </select>
         </label>
     </div>
-</form>
+    <button>Send All</button>
+</section>
 </body>
 <script type="module">
     import {populateFields} from "../lib/field-assist.js";
+    import {collectValues, getFieldAndValue} from "../lib/field-assist.js";
 
     const values = {
         name: 'Albert Einstein',
@@ -37,11 +40,16 @@
 
     populateFields(document.body, values)
     document.body.oninput = (event) => {
+        // this option updates a single field:
+        const {field, value} = getFieldAndValue(event);
+        console.dir({[field]: value})
 
+    }
+    document.body.querySelector('button').onclick = () => {
+        console.dir(collectValues(document.body))
     }
 
 </script>
 
 
-</body>
 </html>
