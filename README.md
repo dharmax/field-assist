@@ -1,15 +1,23 @@
 # Field-Assist
 ## General
-This little, light library makes working with form and input field very easy, normalized and fun.
+This cute library makes working with input fields, inside or outside of forms, very easy, fun, readable and extremely simple.
+It's super light and has no dependencies, and it is TypeScript ready out of the box.   
 
-It's main function is collectValues( baseElement) that basically does the following:
-1. Recursively collect all the values from any input fields under the baseElement that have a "ref" attribute (with a logical name as a value).
+It's main function is, perhaps, `collectValues( baseElement)` that basically does the following:
+1. Recursively collect all the values from any input fields under the baseElement that have a `ref` attribute (with a logical name as a value).
 1. Places them in a simple map, where the ref value is the entry's key, where its  is the **normalized** from the input field.
-1. It validates the values and create an error object (the "_error") in the returned map
+1. Validates the values and create an error object (the "_error") in the returned map
+
+### Field Population
+There's another very cute function, called `populateFields`, which does the opposite: it takes a map of ref-names to values,
+and populate the fields with the values. It is also normalized (e.g. select/checkboxes/radio-buttons are also handled). It is
+the opposite of the collectValues method, of sorts.
       
 ## Normalization
-The normalization means that checkable items (radio buttons groups, multi-selects, checkboxes) appear in the map as 
+The normalization means that checkable items (radio buttons groups, multi-selects, checkboxes, textareas) appear in the map as 
 you would expect them to appear: as booleans, a single value or an array of values, so it would be trivial to work with.
+
+***(you're welcome to suggest other conversions/normalizatons)***
 
 ## Validation
 The validation supports the standard modern HTML validation, of course, plus the ability to easily add a custom javascript
@@ -31,53 +39,9 @@ it uses the same logic, but it finds the input element that was just changed, so
 of all the values. Pretty useful.  
 
 # example      
+See full example in a single web-page under the example directory.
 
-*This is a Riot JS file snippet, but it is irrelevant for understanding the usage of the library  
-```
-<form oninput="{update}">
-    <label>Display Name:
-        <input ref="name" type="text" value="{state.profile.name}">
-    </label>
-    <div class="bio">
-        <label>About myself</label><br>
-         <textarea ref="generalBio" cols="30" rows="10">{state.profile.generalBio}</textarea>
-    </div>
-    <div class="main-language">
-    <label>Main Language
-        <select autocomplete="on" ref="preferredLanguage" value="{state.profile.preferredLanguage}">
-                <option each="{l in state.languages}" selected="{state.profile.preferredLanguage===l}" value="{l}">
-                    {l}
-                </option>
-        </select>
-    </label>
-</form>
-<script>
-    import {userStore} from "../../viewmodel/user-store";
-    input {getFieldAndValue, collectValues} from 'field-assist' 
+# disclaimer 
+This library provided as-is, with absolutely no gouranty 
 
-    export default {
-        
-        async onMounted() {
-            const profile = await userStore.getMyProfile()
-            const languages = ['en', 'he']
-            this.update({profile, languages}      
-        }
-        update(event) {
-
-                // there are two options here, you need to use the one that suit you most
-
-                // this option updates all at once:
-
-                userStore.updateMe( collectValues(this.$))
-
-                // this option updates a single field:
-
-                let {field, value} = getFieldAndValue(event);
-                // noinspection JSIgnoredPromiseFromCall
-                userStore.updateMe({[field]: value})
-        }
-
-    }
-
-</script>
 ```

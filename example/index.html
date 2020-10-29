@@ -8,10 +8,10 @@
 
 <section class="form">
     <label>Display Name:
-        <input ref="name" type="text">
+        <input ref="name" type="text" pattern="[a-zA-Z ]*">
     </label>
     <div class="bio">
-        <label>About myself
+        <label>About myself <br>
             <textarea ref="generalBio" cols="30" rows="10"></textarea>
         </label><br>
     </div>
@@ -25,8 +25,31 @@
         </label>
     </div>
     <button>Send All</button>
+    <label class="errors">
+        Illegal values:
+        <div id="errors"></div>
+    </label>
 </section>
 </body>
+<style>
+    section.form {
+        display: flex;
+        flex-direction: column;
+
+    }
+
+    button {
+        width: 10em;
+    }
+
+    label {
+        color: #084545;
+    }
+
+    .errors {
+        color: red;
+    }
+</style>
 <script type="module">
     import {populateFields} from "../lib/field-assist.js";
     import {collectValues, getFieldAndValue} from "../lib/field-assist.js";
@@ -43,6 +66,8 @@
         // this option updates a single field:
         const {field, value} = getFieldAndValue(event);
         console.dir({[field]: value})
+
+        document.getElementById('errors').textContent = JSON.stringify(collectValues(document.body)._errors, ' ')
 
     }
     document.body.querySelector('button').onclick = () => {
