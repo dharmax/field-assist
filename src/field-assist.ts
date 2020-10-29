@@ -97,7 +97,7 @@ export function getFieldAndValue(event: Event, context?: any, keyFieldName = 're
     if (!target.getAttribute(keyFieldName))
         target = target.parentNode as HTMLElement
     const fieldName = target.getAttribute(keyFieldName) as string
-    const values = collectValues(target.parentNode, keyFieldName, context, keyFieldName)
+    const values = collectValues(target.parentNode as HTMLElement, context, keyFieldName)
     return {field: fieldName, value: values[fieldName]};
 }
 
