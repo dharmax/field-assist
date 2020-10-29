@@ -1,9 +1,9 @@
 {
   "name": "field-assist",
   "version": "1.0.0",
-  "description": "Making reading of input fields easy and  fun",
-  "main": "lib/relative-time.js",
-  "types": "lib/relative-time.d.ts",
+  "description": "Making reading/populating input fields easy and  fun",
+  "main": "lib/field-assist.js",
+  "types": "lib/field-assist.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
@@ -17,6 +17,8 @@
     "fields",
     "form",
     "reading",
+    "populating",
+    "binding",
     "input"
   ],
   "author": "Avi Tshuva, dharmax",
