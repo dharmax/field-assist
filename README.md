@@ -6,6 +6,11 @@ are more related goodies there, see below + demo or the example.
 
 ## Install
 `npm install field-assist`
+
+## API documentation
+[Full API documentation](./api.md)
+
+*Note that there's a TypeScript declaration file, too.*
  
 
 ## General
