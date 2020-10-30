@@ -1,4 +1,13 @@
 # Field-Assist
+**TL;DR** : just write `collectValues(myFormNode)` and get a proper JSON with all the values in all the input fields. There
+are more related goodies there, see below + demo or the example. 
+
+[Live Demo](https://codesandbox.io/s/field-assist-demo-qy86w?file=/src/index.js)
+
+## Install
+`npm install field-assist`
+ 
+
 ## General
 This cute library makes working with input fields, inside or outside of forms, very easy, fun, readable and extremely simple.
 It's super light and has no dependencies, and it is TypeScript ready out of the box.   
@@ -39,7 +48,10 @@ it uses the same logic, but it finds the input element that was just changed, so
 of all the values. Pretty useful.  
 
 # example      
-See full example in a single web-page under the example directory. No need for a server to run it. 
+See full example in a single web-page under the example directory. No need for a server to run it.
+Or you can check out the [Live Demo](https://codesandbox.io/s/field-assist-demo-qy86w?file=/src/index.js)
+of it.
+ 
 
 # disclaimer 
 This library provided as-is, with absolutely no guarantee. Enjoy, support, etc....  

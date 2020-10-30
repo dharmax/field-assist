@@ -1,6 +1,7 @@
 function normalizeValue(e: HTMLInputElement, context: any) {
     const value = e.type == "select-multiple" ? getMultiSelect(e) :
-        e.type == 'checkbox' ? e.checked :
+        e.type == 'checkbox' ?
+            e.checked :
             e.nodeValue || e.getAttribute('value') || e['value'] || e.textContent
 
     const customValidator = e.getAttribute('validator')
