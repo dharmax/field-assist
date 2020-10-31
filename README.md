@@ -2,7 +2,7 @@
 **TL;DR** : just write `collectValues(myFormNode)` and get a proper JSON with all the values in all the input fields. There
 are more related goodies there, see below + demo or the example. 
 
-[Live Demo](https://codesandbox.io/s/field-assist-demo-qy86w?file=/src/index.js)
+[Live Demo](https://stackblitz.com/edit/field-assist-demo?file=index.ts)
 
 ## Install
 `npm install field-assist`
