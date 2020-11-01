@@ -54,7 +54,7 @@ of all the values. Pretty useful.
 
 # example      
 See full example in a single web-page under the example directory. No need for a server to run it.
-Or you can check out the [Live Demo](https://codesandbox.io/s/field-assist-demo-qy86w?file=/src/index.js)
+Or you can check out the [Live Demo](https://stackblitz.com/edit/field-assist-demo?file=index.ts)
 of it.
  
 
