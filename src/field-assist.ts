@@ -29,21 +29,21 @@ export function collectValues(node: Element, context?: any, keyFieldName = 'ref'
     const nodes = refs(node, keyFieldName)
     const errors = {}
 
-    const results: any = nodes.reduce((a: any, element) => {
+    const results: any = nodes.reduce((result: any, element) => {
         const fieldName = element.getAttribute(keyFieldName)
         if (!fieldName)
             return
         const {value, isValid} = normalizeValue(element, context);
 
         if (isValid)
-            a[fieldName] = value
+            setUsingDotReference(result, fieldName, value)
         else {
-            a[fieldName] = Invalid
+            setUsingDotReference(result, fieldName, Invalid)
             // @ts-ignore
-            errors[fieldName] = {value, element}
+            setUsingDotReference(errors, fieldName, {value, element})
         }
 
-        return a
+        return result
     }, {})
     if (Object.keys(errors).length)
         results._errors = errors
@@ -141,9 +141,26 @@ export function populateField(node: HTMLInputElement, value: string | number | b
 export function populateFields(baseNode: HTMLElement, values: { [ref: string]: string | string[] | boolean | number }) {
     const fieldMap = refNodes(baseNode)
     for (let [ref, node] of Object.entries(fieldMap))
-        populateField(node, values[ref])
+        populateField(node, readUsingDotReference(values, ref))
 
 }
 
 
 export const Invalid = Symbol('Invalid')
+
+
+function setUsingDotReference(object: { [f: string]: any }, fieldRef: string, value: any) {
+    let keys = fieldRef.split("."),
+        keyChainLength = Math.max(1, keys.length - 1),
+        i
+    for (i = 0; i < keyChainLength; ++i) {
+        let key = keys[i];
+        object[key] = object[key] || {};
+        object = object[key];
+    }
+    object[keys[i - 1]] = value
+}
+
+function readUsingDotReference(object: { [f: string]: any }, fieldRef: string) {
+    return fieldRef.split(".").reduce((a, c) => a[c], object)
+}
