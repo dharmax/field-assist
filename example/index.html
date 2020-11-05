@@ -31,6 +31,7 @@
         Illegal values:
         <pre id="errors"></pre>
     </label>
+    <pre id="console"></pre>
 </section>
 </body>
 <style>
@@ -65,6 +66,7 @@
 
     populateFields(document.body, values)
     showErrors()
+    const consoleDiv = document.getElementById("console");
 
     function showErrors() {
         // this is errors display example
@@ -82,11 +84,16 @@
         // this option used to update a single field - just what was changed
         const {field, value} = getFieldAndValue(event);
         console.dir({[field]: value})
+        consoleDiv.textContent = JSON.stringify({[field]: value});
+
         showErrors();
 
     }
     document.body.querySelector('button').onclick = () => {
-        console.dir(collectValues(document.body))
+        const allFields = collectValues(document.body)
+        console.dir(allFields)
+        consoleDiv.textContent = JSON.stringify(allFields);
+
     }
 
 </script>

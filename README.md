@@ -53,12 +53,17 @@ it uses the same logic, but it finds the input element that was just changed, so
 of all the values. Pretty useful.  
 
 # example      
-See full example in a single web-page under the example directory. No need for a server to run it.
+See full example in a single web-page under the example directory. Needs  
 Or you can check out the [Live Demo](https://stackblitz.com/edit/field-assist-demo?file=index.ts)
 of it.
  
 
-# disclaimer 
-This library provided as-is, with absolutely no guarantee. Enjoy, support, etc....  
+# License
+This library provided as-is, with absolutely no guarantee. Enjoy, support, etc, in
+short, it's [ISC](https://opensource.org/licenses/ISC).
+
+# Support me
+I'd be happy to receive a star 
+  
 
 ```
