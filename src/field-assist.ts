@@ -99,7 +99,8 @@ export function getFieldAndValue(event: Event, context?: any, keyFieldName = 're
         target = target.parentNode as HTMLElement
     const fieldName = target.getAttribute(keyFieldName) as string
     const values = collectValues(target.parentNode as HTMLElement, context, keyFieldName)
-    return {field: fieldName, value: values[fieldName]};
+    const value = readUsingDotReference(values, fieldName)
+    return {field: fieldName, value};
 }
 
 /**
@@ -140,8 +141,13 @@ export function populateField(node: HTMLInputElement, value: string | number | b
  */
 export function populateFields(baseNode: HTMLElement, values: { [ref: string]: string | string[] | boolean | number }) {
     const fieldMap = refNodes(baseNode)
-    for (let [ref, node] of Object.entries(fieldMap))
-        populateField(node, readUsingDotReference(values, ref))
+    for (let [ref, node] of Object.entries(fieldMap)) {
+        let value = readUsingDotReference(values, ref);
+        if (typeof value === 'object')
+            console.error(`Field ${ref} is an object and therefore unassignable to a single input.`)
+        else
+            populateField(node, value)
+    }
 
 }
 
@@ -149,18 +155,25 @@ export function populateFields(baseNode: HTMLElement, values: { [ref: string]: s
 export const Invalid = Symbol('Invalid')
 
 
-function setUsingDotReference(object: { [f: string]: any }, fieldRef: string, value: any) {
+export function setUsingDotReference(object: { [f: string]: any }, fieldRef: string, value: any) {
+
+
     let keys = fieldRef.split("."),
-        keyChainLength = Math.max(1, keys.length - 1),
+        keyChainEnd = keys.length - 1,
         i
-    for (i = 0; i < keyChainLength; ++i) {
+    for (i = 0; i < keyChainEnd; ++i) {
         let key = keys[i];
         object[key] = object[key] || {};
         object = object[key];
     }
-    object[keys[i - 1]] = value
+    object[keys[i]] = value
+
+    return object
+
 }
 
-function readUsingDotReference(object: { [f: string]: any }, fieldRef: string) {
-    return fieldRef.split(".").reduce((a, c) => a[c], object)
+export function readUsingDotReference(object: { [f: string]: any }, fieldRef: string) {
+    let result: any = {...object}
+    result = fieldRef.split(".").reduce((a, c) => a[c], result)
+    return result
 }

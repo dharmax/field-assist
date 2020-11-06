@@ -22,6 +22,14 @@ It's main function is, perhaps, `collectValues( baseElement)` that basically doe
 1. Places them in a simple map, where the ref value is the entry's key, where its  is the **normalized** from the input field.
 1. Validates the values and create an error object (the "_error") in the returned map
 
+## Features
+* One function call to collect all values in a neat JSON
+* One function call to populate all fields from JSON
+* Supports nested fields (with dot notation in the "ref" names)
+* Tiny and self-contained, zero dependencies
+* Support partial updates (both for reading and populating)
+
+
 ### Field Population
 There's another very cute function, called `populateFields`, which does the opposite: it takes a map of ref-names to values,
 and populate the fields with the values. It is also normalized (e.g. select/checkboxes/radio-buttons are also handled). It is
@@ -53,8 +61,10 @@ it uses the same logic, but it finds the input element that was just changed, so
 of all the values. Pretty useful.  
 
 # example      
-See full example in a single web-page under the example directory. Needs  
-Or you can check out the [Live Demo](https://stackblitz.com/edit/field-assist-demo?file=index.ts)
+See full example in a single web-page under the example directory.
+You can run it from the main project folder: ``npx http-server .`` and just open ``example`` folder from the browser.  
+  
+...Or you can check out the [Live Demo](https://stackblitz.com/edit/field-assist-demo?file=index.ts)
 of it.
  
 

@@ -17,7 +17,7 @@
     </div>
     <div class="main-language">
         <label>Main Language
-            <select autocomplete="on" ref="preferences.preferredLanguage">
+            <select autocomplete="on" ref="preferences.language.default">
                 <option value="English">English</option>
                 <option value="German">German</option>
                 <option value="French">French</option>
@@ -60,7 +60,7 @@
     const values = {
         name: 'Albert Einstein',
         generalBio: 'I was a cool genius',
-        preferences: {preferredLanguage: 'German'},
+        preferences: {language: {default: 'German'}},
 
     }
 
