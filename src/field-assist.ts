@@ -133,13 +133,11 @@ export function getFieldAndValue(event: Event, context?: any, keyFieldName = 're
  * @param value the value
  */
 export function populateField(node: HTMLInputElement, value: string | number | boolean | string[]) {
-
-
-    if (['checkbox', 'option', 'radio', 'textarea', 'select-multi'].indexOf(node.type) == -1) {
-        // @ts-ignore
-        node.value = value.toString()
-        return
-    }
+    //
+    // if (['checkbox', 'option', 'radio', 'textarea', 'select-multi'].indexOf(node.type) == -1) {
+    //     // @ts-ignore
+    //     return
+    // }
 
     const nodeValue = node.value;
     switch (node.type) {
@@ -156,11 +154,17 @@ export function populateField(node: HTMLInputElement, value: string | number | b
             // @ts-ignore
             node.selected = Array.isArray(value) ? value.includes(nodeValue) : nodeValue === value
             return
-
         case 'textarea':
             node.textContent = value.toString()
             return
+        case 'date':
+            node.value = (value as String)?.slice(0, 10) || ''
+            return
+        case 'datetime-local':
+            node.value = (value as String)?.slice(0, 16) || ''
+            return
         default:
+            node.value = value?.toString() || ''
 
     }
 }
@@ -174,6 +178,8 @@ export function populateFields(baseNode: HTMLElement, values: { [ref: string]: s
     const fieldMap = refNodes(baseNode)
     for (let [ref, node] of Object.entries(fieldMap)) {
         let value = readUsingDotReference(values, ref);
+        if (value instanceof Date)
+            value = value.toISOString()
         if (typeof value === 'object' && !Array.isArray(value))
             console.error(`Field ${ref} is an object and therefore unassignable to a single input.`)
         else

@@ -34,6 +34,11 @@
             <input type="checkbox" ref="pets" value="cats">cats
         </label>
     </div>
+    <div class="times">
+        <input type="date" ref="date">
+        <input type="datetime-local" ref="datetime">
+
+    </div>
     <p>
         <button>Send All</button>
     </p>
@@ -72,7 +77,9 @@
         generalBio: 'I was a cool genius',
         preferences: {language: {default: 'German'}},
         status: 'married',
-        pets: ['cats']
+        pets: ['cats'],
+        date: new Date('Nov 5 1968'),
+        time: ''
     }
 
     populateFields(document.body, values)
