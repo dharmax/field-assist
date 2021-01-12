@@ -13,6 +13,7 @@
     <div>
         <input type="radio" name="status" ref="status" value="single">Single
         <input type="radio" name="status" ref="status" value="married">Married
+        <input type="radio" name="status" ref="status" value="divorced">Divorced
     </div>
     <div class="bio">
         <label>About myself <br>
@@ -30,7 +31,7 @@
     </div>
     <div class="colors">
         <label>Preferred colors
-            <select name="colors" multiple ref="colors">
+            <select name="colors" multiple ref="selections.colors">
                 <option value="blue">Blue</option>
                 <option value="orange">Orange</option>
                 <option value="teal">Teal</option>
@@ -56,6 +57,7 @@
 
         </label>
     </div>
+    Scent <input type="text" ref="selections.scent">
     <div class="times">
         <input type="date" ref="date">
         <input type="datetime-local" ref="datetime">
@@ -109,7 +111,7 @@
         pets: ['cats'],
         date: new Date('Nov 5 1968'),
         time: '',
-        colors: ['orange'],
+        selections: {colors: ['orange'], scent: 'great'},
         material: 'plastic'
     }
 

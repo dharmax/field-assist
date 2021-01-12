@@ -134,11 +134,15 @@ export function getFieldAndValue(event: Event, context?: any, keyFieldName = 're
  */
 export function populateField(node: HTMLInputElement, value: string | number | boolean | string[]) {
 
-    const nodeValue = node.value;
     switch (node.type) {
         case 'checkbox':
         case 'radio':
-            node.checked = Array.isArray(value) ? value.includes(nodeValue) : nodeValue === value
+            // @ts-ignore
+            const siblings = node.parentElement.parentElement.querySelectorAll(`[ref="${node.getAttribute('ref')}"]`) || []
+            siblings.forEach(n =>
+                // @ts-ignore
+                n.checked = Array.isArray(value) ? value.includes(n.value) : n.value === value)
+
             return
         case 'select-multi':
             return
