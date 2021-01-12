@@ -1,8 +1,29 @@
 function normalizeValue(e: HTMLInputElement, context: any) {
-    const value = e.type == "select-multiple" ? getMultiSelect(e) :
-        e.type == 'checkbox' ?
-            e.checked :
-            e.nodeValue || e.getAttribute('value') || e['value'] || e.textContent
+
+    let value
+    switch (e.type) {
+        case 'select-multiple':
+            value = getMultiSelect(e)
+            break
+        case 'checkbox':
+            // @ts-ignore
+            const siblings = e.parentElement.parentElement.querySelectorAll(`[ref="${e.getAttribute('ref')}"]`) || []
+            if (siblings.length < 2)
+                value = !!e.checked
+            else {
+                // @ts-ignore
+                value = Array.from(siblings).filter(e => e.checked).map(e => e.value)
+            }
+            break
+        case 'radio':
+            if (!!e.checked)
+                value = e.value
+            else
+                return {skip: true}
+            break
+        default:
+            value = e.nodeValue || e.getAttribute('value') || e['value'] || e.textContent
+    }
 
     const customValidator = e.getAttribute('validator')
     let isValid
@@ -11,7 +32,7 @@ function normalizeValue(e: HTMLInputElement, context: any) {
         isValid = validationFunction(value, context)
     } else
         isValid = !e.validity || e.validity.valid
-    return {value, isValid};
+    return {value, isValid, skip: false};
 }
 
 /**
@@ -29,21 +50,24 @@ export function collectValues(node: Element, context?: any, keyFieldName = 'ref'
     const nodes = refs(node, keyFieldName)
     const errors = {}
 
-    const results: any = nodes.reduce((a: any, element) => {
+    const results: any = nodes.reduce((result: any, element) => {
         const fieldName = element.getAttribute(keyFieldName)
         if (!fieldName)
             return
-        const {value, isValid} = normalizeValue(element, context);
+
+        const {value, isValid, skip} = normalizeValue(element, context);
+        if (skip)
+            return result
 
         if (isValid)
-            a[fieldName] = value
+            setUsingDotReference(result, fieldName, value)
         else {
-            a[fieldName] = Invalid
+            setUsingDotReference(result, fieldName, Invalid)
             // @ts-ignore
-            errors[fieldName] = {value, element}
+            setUsingDotReference(errors, fieldName, {value, element})
         }
 
-        return a
+        return result
     }, {})
     if (Object.keys(errors).length)
         results._errors = errors
@@ -99,7 +123,8 @@ export function getFieldAndValue(event: Event, context?: any, keyFieldName = 're
         target = target.parentNode as HTMLElement
     const fieldName = target.getAttribute(keyFieldName) as string
     const values = collectValues(target.parentNode as HTMLElement, context, keyFieldName)
-    return {field: fieldName, value: values[fieldName]};
+    const value = readUsingDotReference(values, fieldName)
+    return {field: fieldName, value};
 }
 
 /**
@@ -109,27 +134,34 @@ export function getFieldAndValue(event: Event, context?: any, keyFieldName = 're
  */
 export function populateField(node: HTMLInputElement, value: string | number | boolean | string[]) {
 
-    if (!(node.type in ['checkbox', 'select', 'option', 'radio', 'textarea', 'select-one', 'select-multi'])) {
+
+    if (['checkbox', 'option', 'radio', 'textarea', 'select-multi'].indexOf(node.type) == -1) {
         // @ts-ignore
         node.value = value.toString()
         return
     }
 
-    if ('checked' in node) {
-        // @ts-ignore
-        node.checked = node.value in value
-        return;
-    }
-    if ('selected' in node) {
-        // @ts-ignore
-        node.selected = node.value in value
-        return;
-    }
+    const nodeValue = node.value;
+    switch (node.type) {
+        case 'checkbox':
+        case 'radio':
+            node.checked = Array.isArray(value) ? value.includes(nodeValue) : nodeValue === value
+            return
+        case 'select':
+        case 'select-one':
+            return
+        case 'select-multi':
+            return
+        case 'option':
+            // @ts-ignore
+            node.selected = Array.isArray(value) ? value.includes(nodeValue) : nodeValue === value
+            return
 
-    if ('textContent' in node) {
-        // @ts-ignore
-        node.textContent = value.toString()
-        return
+        case 'textarea':
+            node.textContent = value.toString()
+            return
+        default:
+
     }
 }
 
@@ -140,10 +172,39 @@ export function populateField(node: HTMLInputElement, value: string | number | b
  */
 export function populateFields(baseNode: HTMLElement, values: { [ref: string]: string | string[] | boolean | number }) {
     const fieldMap = refNodes(baseNode)
-    for (let [ref, node] of Object.entries(fieldMap))
-        populateField(node, values[ref])
+    for (let [ref, node] of Object.entries(fieldMap)) {
+        let value = readUsingDotReference(values, ref);
+        if (typeof value === 'object' && !Array.isArray(value))
+            console.error(`Field ${ref} is an object and therefore unassignable to a single input.`)
+        else
+            populateField(node, value)
+    }
 
 }
 
 
 export const Invalid = Symbol('Invalid')
+
+
+export function setUsingDotReference(object: { [f: string]: any }, fieldRef: string, value: any) {
+
+
+    let keys = fieldRef.split("."),
+        keyChainEnd = keys.length - 1,
+        i
+    for (i = 0; i < keyChainEnd; ++i) {
+        let key = keys[i];
+        object[key] = object[key] || {};
+        object = object[key];
+    }
+    object[keys[i]] = value
+
+    return object
+
+}
+
+export function readUsingDotReference(object: { [f: string]: any }, fieldRef: string) {
+    let result: any = {...object}
+    result = fieldRef.split(".").reduce((a, c) => a[c], result)
+    return result
+}

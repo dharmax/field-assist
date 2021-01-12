@@ -10,6 +10,10 @@
     <label>Display Name: (english alpha only)
         <input ref="name" type="text" pattern="[a-zA-Z ]*">
     </label>
+    <div>
+        <input type="radio" name="status" ref="status" value="single">Single
+        <input type="radio" name="status" ref="status" value="married">Married
+    </div>
     <div class="bio">
         <label>About myself <br>
             <textarea ref="generalBio" cols="30" rows="10"></textarea>
@@ -17,11 +21,17 @@
     </div>
     <div class="main-language">
         <label>Main Language
-            <select autocomplete="on" ref="preferredLanguage">
+            <select autocomplete="on" ref="preferences.language.default">
                 <option value="English">English</option>
                 <option value="German">German</option>
                 <option value="French">French</option>
             </select>
+        </label>
+    </div>
+    <div class="pets">
+        <label>Pets
+            <input type="checkbox" ref="pets" value="dogs">dogs
+            <input type="checkbox" ref="pets" value="cats">cats
         </label>
     </div>
     <p>
@@ -60,8 +70,9 @@
     const values = {
         name: 'Albert Einstein',
         generalBio: 'I was a cool genius',
-        preferredLanguage: 'German',
-
+        preferences: {language: {default: 'German'}},
+        status: 'married',
+        pets: ['cats']
     }
 
     populateFields(document.body, values)

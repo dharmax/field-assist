@@ -57,3 +57,13 @@ export declare function populateFields(baseNode: HTMLElement, values: {
 }): void;
 
 export declare const Invalid: unique symbol;
+
+export declare function setUsingDotReference(object: {
+    [f: string]: any;
+}, fieldRef: string, value: any): {
+    [f: string]: any;
+};
+
+export declare function readUsingDotReference(object: {
+    [f: string]: any;
+}, fieldRef: string): any;
