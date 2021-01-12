@@ -11,7 +11,6 @@
 export declare function collectValues(node: Element, context?: any, keyFieldName?: string): {
     [k: string]: any;
 };
-
 /**
  *
  * @param node start search node
@@ -19,7 +18,6 @@ export declare function collectValues(node: Element, context?: any, keyFieldName
  * @return array of elements that have the "ref" attribute
  */
 export declare function refs(node: Element, keyFieldName?: string): HTMLInputElement[];
-
 /**
  * @return elements map by the ref name
  * @param node
@@ -28,7 +26,6 @@ export declare function refs(node: Element, keyFieldName?: string): HTMLInputEle
 export declare function refNodes(node: Element, keyFieldName?: string): {
     [ref: string]: HTMLInputElement;
 };
-
 /**
  * Utility method that let you get the field name and value of the input field that is associated with an event
  * @param event the event
@@ -39,14 +36,12 @@ export declare function getFieldAndValue(event: Event, context?: any, keyFieldNa
     field: string;
     value: any;
 };
-
 /**
  * Populate a single field in a normalized way
  * @param node the field's node
  * @param value the value
  */
 export declare function populateField(node: HTMLInputElement, value: string | number | boolean | string[]): void;
-
 /**
  * Populate a whole form from a map of field names and values
  * @param baseNode the base of the form (doesn't have to be a Form element)
@@ -55,15 +50,12 @@ export declare function populateField(node: HTMLInputElement, value: string | nu
 export declare function populateFields(baseNode: HTMLElement, values: {
     [ref: string]: string | string[] | boolean | number;
 }): void;
-
 export declare const Invalid: unique symbol;
-
 export declare function setUsingDotReference(object: {
     [f: string]: any;
 }, fieldRef: string, value: any): {
     [f: string]: any;
 };
-
 export declare function readUsingDotReference(object: {
     [f: string]: any;
 }, fieldRef: string): any;
