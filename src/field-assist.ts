@@ -133,20 +133,12 @@ export function getFieldAndValue(event: Event, context?: any, keyFieldName = 're
  * @param value the value
  */
 export function populateField(node: HTMLInputElement, value: string | number | boolean | string[]) {
-    //
-    // if (['checkbox', 'option', 'radio', 'textarea', 'select-multi'].indexOf(node.type) == -1) {
-    //     // @ts-ignore
-    //     return
-    // }
 
     const nodeValue = node.value;
     switch (node.type) {
         case 'checkbox':
         case 'radio':
             node.checked = Array.isArray(value) ? value.includes(nodeValue) : nodeValue === value
-            return
-        case 'select':
-        case 'select-one':
             return
         case 'select-multi':
             return
@@ -163,6 +155,8 @@ export function populateField(node: HTMLInputElement, value: string | number | b
         case 'datetime-local':
             node.value = (value as String)?.slice(0, 16) || ''
             return
+        case 'select':
+        case 'select-one':
         default:
             node.value = value?.toString() || ''
 

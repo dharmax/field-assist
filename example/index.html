@@ -28,10 +28,32 @@
             </select>
         </label>
     </div>
+    <div class="colors">
+        <label>Preferred colors
+            <select name="colors" multiple ref="colors">
+                <option value="blue">Blue</option>
+                <option value="orange">Orange</option>
+                <option value="teal">Teal</option>
+            </select>
+        </label>
+    </div>
+
     <div class="pets">
         <label>Pets
+            <span>
             <input type="checkbox" ref="pets" value="dogs">dogs
             <input type="checkbox" ref="pets" value="cats">cats
+            </span>
+        </label>
+    </div>
+    <div class="one-thing">
+        <label>Single Select
+            <select name="material" ref="material">
+                <option value="steel">Steal</option>
+                <option value="plastic">Plastic</option>
+                <option value="glass">Glass</option>
+            </select>
+
         </label>
     </div>
     <div class="times">
@@ -63,6 +85,13 @@
 
     label {
         color: #084545;
+        display: flex;
+        align-items: center;
+    }
+
+    label > * {
+        padding: 2px;
+        flex-grow: 0.5;
     }
 
     .errors {
@@ -79,7 +108,9 @@
         status: 'married',
         pets: ['cats'],
         date: new Date('Nov 5 1968'),
-        time: ''
+        time: '',
+        colors: ['orange'],
+        material: 'plastic'
     }
 
     populateFields(document.body, values)
