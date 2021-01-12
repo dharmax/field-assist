@@ -144,7 +144,9 @@ export function populateField(node: HTMLInputElement, value: string | number | b
                 n.checked = Array.isArray(value) ? value.includes(n.value) : n.value === value)
 
             return
-        case 'select-multi':
+        case 'select-multiple':
+            // @ts-ignore
+            Array.from(node.children).forEach(option => option.selected = (value || []).indexOf(option.value) != -1)
             return
         case 'option':
             // @ts-ignore
