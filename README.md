@@ -50,23 +50,30 @@ accessible via the map under the "_errors" entry.
 
 ### custom validator
 
-The custom validator should be defined in the "validator" attribute and should be a JS function that **returns a function** 
+The custom validator should be defined in the "validator" attribute and should be a JS function that **returns a
+function**
 with the following signature: f( value, context): boolean. Very simple. The context is the option context object that
-you may pass to the collectValues method.  
+you may pass to the collectValues method.
 
 ## Update-as-you-type
 
-The function getFieldAndValue(event) is useful for PWA-style update-as-you-type style. See example. Internally
-it uses the same logic, but it finds the input element that was just changed, so you can process further only it, instead 
-of all the values. Pretty useful.  
+The function getFieldAndValue(event) is useful for PWA-style update-as-you-type style. See example. Internally it uses
+the same logic, but it finds the input element that was just changed, so you can process further only it, instead of all
+the values. Pretty useful.
 
-# example      
-See full example in a single web-page under the example directory.
-You can run it from the main project folder: ``npx http-server .`` and just open ``example`` folder from the browser.  
-  
+## enabling/disabling fields
+
+using the ``disable`` function, you can disable or enable input fields by name. You can do it to the whole sub-document
+by not providing field names. You can even control sub-fields (e.g. specific radio buttons) but that's partially
+supported right now.
+
+# example
+
+See full example in a single web-page under the example directory. You can run it from the main project
+folder: ``npx http-server .`` and just open ``example`` folder from the browser.
+
 ...Or you can check out the [Live Demo](https://stackblitz.com/edit/field-assist-demo?file=index.ts)
 of it.
- 
 
 # License
 This library provided as-is, with absolutely no guarantee. Enjoy, support, etc, in
