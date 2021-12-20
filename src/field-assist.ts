@@ -1,3 +1,5 @@
+const DEFAULT_KEY_FIELDNAME = 'ref'
+
 function normalizeValue(e: HTMLInputElement, context: any) {
 
     let value
@@ -7,7 +9,7 @@ function normalizeValue(e: HTMLInputElement, context: any) {
             break
         case 'checkbox':
             // @ts-ignore
-            const siblings = e.parentElement.parentElement.querySelectorAll(`[ref="${e.getAttribute('ref')}"]`) || []
+            const siblings = e.parentElement.parentElement.querySelectorAll(`[ref="${e.getAttribute(DEFAULT_KEY_FIELDNAME)}"]`) || []
             if (siblings.length < 2)
                 value = !!e.checked
             else {
@@ -35,6 +37,7 @@ function normalizeValue(e: HTMLInputElement, context: any) {
     return {value, isValid, skip: false};
 }
 
+
 /**
  * Looks for elements with the "ref" (or whatever other  attribute then returns a map with the values
  * inside those elements, with the string in the "ref" as the name.
@@ -45,7 +48,7 @@ function normalizeValue(e: HTMLInputElement, context: any) {
  * @param context an optional context object that will be injected into a custom validator
  * @param keyFieldName optional alternative reference field name
  */
-export function collectValues(node: Element, context?: any, keyFieldName = 'ref'): { [k: string]: any } {
+export function collectValues(node: Element, context?: any, keyFieldName = DEFAULT_KEY_FIELDNAME): { [k: string]: any } {
 
     const nodes = refs(node, keyFieldName)
     const errors = {}
@@ -88,7 +91,7 @@ function getMultiSelect(e: HTMLElement) {
  * @param keyFieldName optional alternative reference field name
  * @return array of elements that have the "ref" attribute
  */
-export function refs(node: Element, keyFieldName = 'ref'): HTMLInputElement[] {
+export function refs(node: Element, keyFieldName = DEFAULT_KEY_FIELDNAME): HTMLInputElement[] {
     const nodes = node.querySelectorAll(`[${keyFieldName}]`)
     // @ts-ignore
     return Array.of(...nodes) as HTMLInputElement[]
@@ -99,7 +102,7 @@ export function refs(node: Element, keyFieldName = 'ref'): HTMLInputElement[] {
  * @param node
  * @param keyFieldName optional alternative reference field name
  */
-export function refNodes(node: Element, keyFieldName = 'ref'): { [ref: string]: HTMLInputElement } {
+export function refNodes(node: Element, keyFieldName = DEFAULT_KEY_FIELDNAME): { [ref: string]: HTMLInputElement } {
 
     const map: { [ref: string]: HTMLInputElement } = {}
     const elements = refs(node, keyFieldName)
@@ -117,7 +120,7 @@ export function refNodes(node: Element, keyFieldName = 'ref'): { [ref: string]: 
  * @param context optional context for the collectValue inner call
  * @param keyFieldName optional alternative to the "ref" attribute name
  */
-export function getFieldAndValue(event: Event, context?: any, keyFieldName = 'ref'): { field: string, value: any } {
+export function getFieldAndValue(event: Event, context?: any, keyFieldName = DEFAULT_KEY_FIELDNAME): { field: string, value: any } {
     let target = event.target as HTMLElement;
     if (!target.getAttribute(keyFieldName))
         target = target.parentNode as HTMLElement
@@ -138,7 +141,7 @@ export function populateField(node: HTMLInputElement, value: string | number | b
         case 'checkbox':
         case 'radio':
             // @ts-ignore
-            const siblings = node.parentElement.parentElement.querySelectorAll(`[ref="${node.getAttribute('ref')}"]`) || []
+            const siblings = node.parentElement.parentElement.querySelectorAll(`[ref="${node.getAttribute(DEFAULT_KEY_FIELDNAME)}"]`) || []
             siblings.forEach(n =>
                 // @ts-ignore
                 n.checked = Array.isArray(value) ? value.includes(n.value) : n.value === value)
@@ -213,4 +216,28 @@ export function readUsingDotReference(object: { [f: string]: any }, fieldRef: st
     let result: any = {...object}
     result = fieldRef.split(".").reduce((a, c) => a[c], result)
     return result
+}
+
+/**
+ * disable or enable all or part of the fields
+ * @param baseNode
+ * @param disable
+ * @param fields null means all, otherwise an array of field name is expected
+ * @param subfield lets you specify specific cases in a multiple options inputs
+ * @param keyFieldName
+ */
+export function disable(baseNode: HTMLElement, disable = true, fields?: string[], subfield?: string, keyFieldName = DEFAULT_KEY_FIELDNAME) {
+
+    const nodes: HTMLElement[] = refs(baseNode, keyFieldName)
+    for (let n of nodes) {
+        if (fields) {
+            const r = n.getAttribute(keyFieldName) as string
+            if (!fields.includes(r) || subfield && subfield != n.getAttribute('value'))
+                continue
+        }
+        disable ?
+            n.setAttribute('disabled', '') :
+            n.removeAttribute('disabled')
+    }
+
 }

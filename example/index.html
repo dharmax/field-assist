@@ -101,7 +101,7 @@
     }
 </style>
 <script type="module">
-    import {populateFields, collectValues, getFieldAndValue} from "../lib/field-assist.js";
+    import {populateFields, collectValues, getFieldAndValue, disable} from "../lib/field-assist.js";
 
     const values = {
         name: 'Albert Einstein',
@@ -116,7 +116,15 @@
     }
 
     populateFields(document.body, values)
+    disable(document.body)
+    setTimeout(() => {
+        disable(document.body, false)
+        disable(document.body, true, ['pets'])
+    }, 2000)
+
+
     showErrors()
+
     const consoleDiv = document.getElementById("console");
 
     function showErrors() {

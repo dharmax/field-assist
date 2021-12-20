@@ -59,3 +59,12 @@ export declare function setUsingDotReference(object: {
 export declare function readUsingDotReference(object: {
     [f: string]: any;
 }, fieldRef: string): any;
+/**
+ * disable or enable all or part of the fields
+ * @param baseNode
+ * @param disable
+ * @param fields null means all, otherwise an array of field name is expected
+ * @param subfield lets you specify specific cases in a multiple options inputs
+ * @param keyFieldName
+ */
+export declare function disable(baseNode: HTMLElement, disable?: boolean, fields?: string[], subfield?: string, keyFieldName?: string): void;
