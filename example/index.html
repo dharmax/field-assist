@@ -40,10 +40,23 @@
     </div>
 
     <div class="pets">
+        <label>
+            <p>Simple (boolean) checkbox</p>
+            <input type="checkbox" ref="amIGood">
+
+        </label>
         <label>Pets
+            <p>Multiple selection checkbox</p>
             <span>
             <input type="checkbox" ref="pets" value="dogs">dogs
             <input type="checkbox" ref="pets" value="cats">cats
+            </span>
+        </label>
+        <label>Monsters
+            <p>You are not allowed to choose monsters</p>
+            <span>
+            <input type="checkbox" ref="monsters" value="shrek">shrek
+            <input type="checkbox" ref="monsters" value="godzila">Godzila
             </span>
         </label>
     </div>
@@ -119,7 +132,7 @@
     disable(document.body)
     setTimeout(() => {
         disable(document.body, false)
-        disable(document.body, true, ['pets'])
+        disable(document.body, true, ['monsters'])
     }, 2000)
 
 

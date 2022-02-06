@@ -138,8 +138,15 @@ export function getFieldAndValue(event: Event, context?: any, keyFieldName = DEF
 export function populateField(node: HTMLInputElement, value: string | number | boolean | string[]) {
 
     switch (node.type) {
-        case 'checkbox':
-        case 'radio':
+        case 'checkbox': {
+            // @ts-ignore
+            const siblings = node.parentElement.parentElement.querySelectorAll(`[ref="${node.getAttribute(DEFAULT_KEY_FIELDNAME)}"]`) || []
+            if (siblings.length === 1) {
+                node.checked = !!value
+                break;
+            }
+        }
+        case 'radio': {
             // @ts-ignore
             const siblings = node.parentElement.parentElement.querySelectorAll(`[ref="${node.getAttribute(DEFAULT_KEY_FIELDNAME)}"]`) || []
             siblings.forEach(n =>
@@ -147,6 +154,7 @@ export function populateField(node: HTMLInputElement, value: string | number | b
                 n.checked = Array.isArray(value) ? value.includes(n.value) : n.value === value)
 
             return
+        }
         case 'select-multiple':
             // @ts-ignore
             Array.from(node.children).forEach(option => option.selected = (value || []).indexOf(option.value) != -1)
