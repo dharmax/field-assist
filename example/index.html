@@ -77,13 +77,18 @@
 
     </div>
     <p>
-        <button>Send All</button>
+        <button id="sendAll" onclick="sendAll();">Send All</button>
     </p>
     <label class="errors">
         Illegal values:
         <pre id="errors"></pre>
     </label>
     <pre id="console"></pre>
+</section>
+<h1>Auto-form</h1>
+<button onclick="createForm()">Create Form</button>
+<section class="autoform">
+
 </section>
 </body>
 <style>
@@ -128,6 +133,7 @@
         material: 'plastic'
     }
 
+
     populateFields(document.body, values)
     disable(document.body)
     setTimeout(() => {
@@ -152,21 +158,21 @@
         }
     }
 
-    document.body.oninput = (event) => {
-        // this option used to update a single field - just what was changed
-        const {field, value} = getFieldAndValue(event);
-        console.dir({[field]: value})
-        consoleDiv.textContent = JSON.stringify({[field]: value});
 
-        showErrors();
+    window.sendAll = () => {
 
-    }
-    document.body.querySelector('button').onclick = () => {
         const allFields = collectValues(document.body)
         console.dir(allFields)
         consoleDiv.textContent = JSON.stringify(allFields);
 
     }
+
+    window.createForm = () => {
+        const form = new AutoForm(values)
+        form.render(document.body.querySelector('autoform'))
+
+    }
+
 
 </script>
 
