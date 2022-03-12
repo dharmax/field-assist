@@ -27,17 +27,17 @@ export class Autoform {
     private renderFields(node: HTMLElement, parents: string[] = []) {
         for (let [fieldName, value] of Object.entries(data)) {
             const fmd = this.getFieldMetaData(fieldName, value, parents)
-            const newNode = this.renderField(fieldName, fmd)
+            const newNode = this.renderField(fieldName, fmd, value)
             node.appendChild(newNode)
         }
     }
 
-    getFieldMetaData(fieldName: string, value, parents): FieldMetaData {
+    getFieldMetaData(fieldName: string, value: any, parents: string[]): FieldMetaData {
 
         const self = this
         return findFMD(this.metaData, parents) || createFMD()
 
-        function findFMD(meta, parentsList): FieldMetaData {
+        function findFMD(meta: FormMetaData, parentsList: string[]): FieldMetaData {
             if (!parentsList.length)
                 return meta[fieldName]
             const p = parents.shift()
@@ -47,51 +47,97 @@ export class Autoform {
         function createFMD() {
             if (typeof value === 'object' && !(value instanceof Date)) {
 
-                return <FieldMetaData>{
+                const fmt: FieldMetaData = {
                     label: self.textTranslator(fieldName),
-                    nested: true
+                    nested: true,
+                    componentType: 'nested'
+                }
+                return fmt
+            }
+            if (Array.isArray(value)) {
+                if (typeof (value[0]) === 'object') {
+                    const fmt: FieldMetaData = {
+                        label: self.textTranslator(fieldName),
+                        componentType: 'table'
+                    }
+                    return fmt
+
+
+                } else if (['string', 'number'].includes(typeof (value[0]))) {
+                    const fmt: FieldMetaData = {
+                        label: self.textTranslator(fieldName),
+                        componentType: 'select'
+                    }
+                    return fmt
                 }
             }
             const fmt: FieldMetaData = {
                 label: self.textTranslator(fieldName),
-                defaultValue: value,
-                tooltip: '',
-                helpText: ''
+                nested: true,
+                componentType: 'nested'
             }
-            self.guessType(fmt, value)
-        }
-    }
+            return fmt
 
-    private renderField(fieldName: string, fieldMetaData: FieldMetaData): HTMLNodeElement {
 
-        return null
-    }
-
-    private guessType(fmt: FieldMetaData, value: any) {
-        if (Array.isArray(value))
-            fmt.componentType = 'select'
-        else switch (typeof value) {
-            case 'boolean':
-                fmt.componentType = 'checkbox'
-                break
-            case 'object': // date is assumed
-                fmt.componentType = 'input'
-                fmt.attributes['type'] = 'local-datetime'
-                break
-            case 'number':
-                fmt.componentType = 'input'
-                fmt.attributes['type'] = 'number'
-                break
-            case 'string':
-                fmt.componentType = (value.length > 40 || value.includes('\n')) ? 'textarea' : 'input'
-                break
-            case 'undefined':
-            default:
-                fmt.componentType = 'input'
-                break
         }
 
+        const fmt: FieldMetaData = {
+            label: self.textTranslator(fieldName),
+            defaultValue: value,
+            tooltip: '',
+            helpText: ''
+        }
+        self.guessType(fmt, value)
+        return fmt
     }
+}
+
+private
+renderField(fieldName
+:
+string, fieldMetaData
+:
+FieldMetaData, value
+:
+any
+):
+HTMLElement
+{
+
+    return null
+}
+
+private
+guessType(fmt
+:
+FieldMetaData, value
+:
+any
+)
+{
+
+    switch (typeof value) {
+        case 'boolean':
+            fmt.componentType = 'checkbox'
+            break
+        case 'object': // date is assumed
+            fmt.componentType = 'input'
+            fmt.attributes['type'] = 'local-datetime'
+            break
+        case 'number':
+            fmt.componentType = 'input'
+            fmt.attributes['type'] = 'number'
+            break
+        case 'string':
+            fmt.componentType = (value.length > 40 || value.includes('\n')) ? 'textarea' : 'input'
+            break
+        case 'undefined':
+        default:
+            fmt.componentType = 'input'
+            break
+    }
+
+}
 }
 
 export type FormMetaData = { [fieldName: string]: FieldMetaData }
