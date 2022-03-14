@@ -32,8 +32,11 @@ function normalizeValue(e: HTMLInputElement, context: any) {
     if (customValidator) {
         const validationFunction = eval(customValidator.toString());
         isValid = validationFunction(value, context)
+        e.setCustomValidity(isValid ? "" : "Invalid value")
     } else
         isValid = !e.validity || e.validity.valid
+
+    e.reportValidity()
     return {value, isValid, skip: false};
 }
 

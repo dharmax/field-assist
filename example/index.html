@@ -29,6 +29,11 @@
             </select>
         </label>
     </div>
+    <div class="custom-validator">
+        <label>Custom Validator (up to ten)
+            <input type="number" name="num" ref="upToTen" validator="(v)=> v < 10 ">
+        </label>
+    </div>
     <div class="colors">
         <label>Preferred colors
             <select name="colors" multiple ref="selections.colors">
@@ -130,7 +135,8 @@
         date: new Date('Nov 5 1968'),
         time: '',
         selections: {colors: ['orange', 'blue'], scent: 'great'},
-        material: 'plastic'
+        material: 'plastic',
+        upToTen: 2
     }
 
 
