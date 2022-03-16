@@ -6,7 +6,7 @@
 </head>
 <body>
 
-<section class="form">
+<section class="form" onchange="printChangedField()">
     <label>Display Name: (english alpha only)
         <input ref="name" type="text" pattern="[a-zA-Z ]*">
     </label>
@@ -125,6 +125,7 @@
 </style>
 <script type="module">
     import {populateFields, collectValues, getFieldAndValue, disable} from "../lib/field-assist.js";
+    import {AutoForm} from "../lib/auto-form.js";
 
     const values = {
         name: 'Albert Einstein',
@@ -177,6 +178,9 @@
         const form = new AutoForm(values)
         form.render(document.body.querySelector('autoform'))
 
+    }
+    window.printChangedField = function () {
+        console.log(getFieldAndValue(window.event))
     }
 
 

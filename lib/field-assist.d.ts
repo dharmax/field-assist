@@ -26,16 +26,18 @@ export declare function refs(node: Element, keyFieldName?: string): HTMLInputEle
 export declare function refNodes(node: Element, keyFieldName?: string): {
     [ref: string]: HTMLInputElement;
 };
+
 /**
  * Utility method that let you get the field name and value of the input field that is associated with an event
  * @param event the event
  * @param context optional context for the collectValue inner call
  * @param keyFieldName optional alternative to the "ref" attribute name
  */
-export declare function getFieldAndValue(event: Event, context?: any, keyFieldName?: string): {
+export declare function getFieldAndValue(event: Event | HTMLElement, context?: any, keyFieldName?: string): {
     field: string;
     value: any;
 };
+
 /**
  * Populate a single field in a normalized way
  * @param node the field's node
