@@ -122,6 +122,12 @@
     .errors {
         color: red;
     }
+
+    .autoform form div {
+        padding: 2px;
+        display: grid;
+        grid-template-columns: 12em 20em;
+    }
 </style>
 <script type="module">
     import {populateFields, collectValues, getFieldAndValue, disable} from "../lib/field-assist.js";
@@ -176,7 +182,8 @@
 
     window.createForm = () => {
         const form = new AutoForm(values)
-        form.render(document.body.querySelector('autoform'))
+        const formNode = form.render(document.body.querySelector('.autoform'))
+        populateFields(formNode, values)
 
     }
     window.printChangedField = function () {
