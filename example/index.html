@@ -182,6 +182,10 @@
 
     window.createForm = () => {
         const form = new AutoForm(values)
+
+        // TODO test user metadata
+        // TODO add support for tables
+        // TODO add support for nested objects
         const formNode = form.render(document.body.querySelector('.autoform'))
         populateFields(formNode, values)
 
