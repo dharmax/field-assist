@@ -184,6 +184,11 @@
         const form = new AutoForm(values)
 
         // TODO test user metadata
+        form.metaData.pets = {
+            label: 'PETS',
+            componentType: 'select',
+            options: ['Cats', 'Dogs']
+        }
         // TODO add support for tables
         // TODO add support for nested objects
         const formNode = form.render(document.body.querySelector('.autoform'))

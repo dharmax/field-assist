@@ -80,50 +80,93 @@ export class AutoForm {
     private renderField(fieldName: string, fmt: FieldMetaData, value: any): HTMLElement {
 
         let node: HTMLElement
-        switch (fmt.componentType) {
-            case 'input':
-                node = ce('input')
-                break
-            case 'date':
-                node = ce('input')
-                node.setAttribute('type', 'date')
-                break
-            case 'table':
-                node = ce('span')
-                node.innerText = 'unimplemented'
-                // TODO
-                break
-            case 'select':
-                node = ce('select')
-                // @ts-ignore
-                fmt.nested.forEach((o: any) => {
-                    const option = ce('option') as HTMLOptionElement
-                    node.appendChild(option)
-                    option.innerText = this.textTranslator(o.text)
-                    option.setAttribute('value', o.value)
-                })
-                break
-
-            case 'checkbox':
-                node = ce('input')
-                node.setAttribute('type', 'checkbox')
-                break
-            case 'textarea':
-                node = ce('textarea')
-                break
-            case 'object':
-            default:
-                node = ce('input')
-        }
-        Object.entries(fmt.attributes || {}).forEach(([k, v]) => node.setAttribute(k, v))
-        node.setAttribute('ref', fieldName)
-
         const block = ce('div')
         const label = ce('label') as HTMLLabelElement
         block.appendChild(label)
         // @ts-ignore
         label.textContent = fmt.label
-        block.appendChild(node)
+        switch (fmt.componentType) {
+            case 'input':
+                node = ce('input')
+                node.setAttribute('ref', fieldName)
+                block.appendChild(node)
+                break
+            case 'date':
+                node = ce('input')
+                node.setAttribute('ref', fieldName)
+                node.setAttribute('type', 'date')
+                block.appendChild(node)
+                break
+            case 'table':
+                node = ce('span')
+                node.innerText = 'unimplemented'
+                // TODO
+                block.appendChild(node)
+                break
+            case 'select':
+                node = ce('select')
+                node.setAttribute('ref', fieldName)
+                block.appendChild(node)
+                // @ts-ignore
+                fmt.options.forEach((o: any) => {
+                    const option = ce('option') as HTMLOptionElement
+                    node.appendChild(option)
+                    option.innerText = this.textTranslator(o.text || o)
+                    option.setAttribute('value', o.value || o)
+                })
+                break
+
+            case 'checkbox':
+                if (fmt.options) {
+                    // @ts-ignore
+                    fmt.options.forEach((o: any) => {
+                        const option = ce('input') as HTMLOptionElement
+                        node.setAttribute('type', 'checkbox')
+                        node.appendChild(option)
+                        option.innerText = this.textTranslator(o.text || o)
+                        option.setAttribute('value', o.value || o)
+                        node.setAttribute('ref', fieldName)
+                        node.setAttribute('name', fieldName)
+                        block.appendChild(node)
+                    })
+                } else {
+                    node = ce('input')
+                    node.setAttribute('type', 'checkbox')
+                    node.setAttribute('ref', fieldName)
+                    block.appendChild(node)
+                }
+                break
+            case 'radio':
+                if (fmt.options) {
+                    // @ts-ignore
+                    fmt.options.forEach((o: any) => {
+                        const option = ce('input') as HTMLOptionElement
+                        node.setAttribute('type', 'radio')
+                        node.appendChild(option)
+                        option.innerText = this.textTranslator(o.text || o)
+                        option.setAttribute('value', o.value || o)
+                        block.appendChild(node)
+
+                    })
+                } else {
+                    node = ce('input')
+                    node.setAttribute('type', 'checkbox')
+                    block.appendChild(node)
+
+                }
+                break
+            case 'textarea':
+                node = ce('textarea')
+                block.appendChild(node)
+                break
+            case 'object':
+            default:
+                node = ce('input')
+                block.appendChild(node)
+
+        }
+        // @ts-ignore
+        node && Object.entries(fmt.attributes || {}).forEach(([k, v]) => node.setAttribute(k, v))
 
         return block
     }
@@ -160,6 +203,7 @@ export type FieldMetaData = FormMetaData | {
     attributes?: { [name: string]: string }
     defaultValue?: any
     nested?: any[] | object
+    options?: { text: string, value: string }[] | string
     dependency?: string // if a field must be set before this one, this is the fields name
 
 }
