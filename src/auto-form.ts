@@ -117,43 +117,45 @@ export class AutoForm {
                 break
 
             case 'checkbox':
+                node = ce('span')
                 if (fmt.options) {
                     // @ts-ignore
                     fmt.options.forEach((o: any) => {
                         const option = ce('input') as HTMLOptionElement
-                        node.setAttribute('type', 'checkbox')
+                        option.setAttribute('type', 'checkbox')
                         node.appendChild(option)
                         option.innerText = this.textTranslator(o.text || o)
                         option.setAttribute('value', o.value || o)
                         node.setAttribute('ref', fieldName)
-                        node.setAttribute('name', fieldName)
-                        block.appendChild(node)
                     })
                 } else {
                     node = ce('input')
                     node.setAttribute('type', 'checkbox')
                     node.setAttribute('ref', fieldName)
-                    block.appendChild(node)
                 }
+                block.appendChild(node)
                 break
             case 'radio':
+                node = ce('span')
+                // @ts-ignore
+                node.addClass('radio-button-set')
                 if (fmt.options) {
                     // @ts-ignore
                     fmt.options.forEach((o: any) => {
                         const option = ce('input') as HTMLOptionElement
-                        node.setAttribute('type', 'radio')
+                        option.setAttribute('type', 'radio')
+                        option.setAttribute('name', fieldName)
                         node.appendChild(option)
-                        option.innerText = this.textTranslator(o.text || o)
+                        const text = ce('span')
+                        node.appendChild(text)
+                        text.innerText = this.textTranslator(o.text || o)
                         option.setAttribute('value', o.value || o)
-                        block.appendChild(node)
-
                     })
                 } else {
                     node = ce('input')
                     node.setAttribute('type', 'checkbox')
-                    block.appendChild(node)
-
                 }
+                block.appendChild(node)
                 break
             case 'textarea':
                 node = ce('textarea')
@@ -208,6 +210,6 @@ export type FieldMetaData = FormMetaData | {
 
 }
 
-function ce(e: string) {
+function ce(e: string): HTMLElement {
     return document.createElement(e)
 }

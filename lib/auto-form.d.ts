@@ -7,19 +7,13 @@ export declare class AutoForm {
      */
     textTranslator: (s: string) => string;
     readonly form: HTMLFormElement;
-
     constructor(data: any, metaData?: FormMetaData);
-
     render(root?: HTMLElement): HTMLFormElement;
-
     private renderFields;
-
     getFieldMetaData(fieldName: string, value: any, parents: string[]): FieldMetaData;
-
     private renderField;
     private guessType;
 }
-
 export declare type FormMetaData = {
     [fieldName: string]: FieldMetaData;
 };
