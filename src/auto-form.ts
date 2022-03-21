@@ -8,23 +8,23 @@ export class AutoForm {
 
     readonly form: HTMLFormElement
 
-    constructor(private data: any, public metaData: FormMetaData = {}) {
+    constructor(public metaData: FormMetaData = {}) {
         const form = document.createElement('form')
         form.className = 'autoform'
         this.form = form
     }
 
-    render(root?: HTMLElement) {
-        this.renderFields(this.form)
+    render(data: any, root?: HTMLElement) {
+        this.renderFields(this.form, data)
         root?.appendChild(this.form)
         return this.form
     }
 
 
-    private renderFields(node: HTMLElement, parents: string[] = []) {
-        for (let [fieldName, value] of Object.entries(this.data)) {
+    private renderFields(node: HTMLElement, data: any, parents: string[] = []) {
+        for (let [fieldName, value] of Object.entries(data)) {
             const fmd = this.getFieldMetaData(fieldName, value, parents)
-            const newNode = this.renderField(fieldName, fmd, value)
+            const newNode = this.renderField(fieldName, fmd, value, parents)
             node.appendChild(newNode)
         }
     }
@@ -36,7 +36,7 @@ export class AutoForm {
 
         function findFMD(meta: FormMetaData, parentsList: string[]): FieldMetaData {
             if (!parentsList.length)
-                return meta[fieldName]
+                return meta?.[fieldName]
             // if we're here, it means it's a nested object/form
             const p: string = <string>parents.shift()
             return findFMD(meta[p] as FormMetaData, parents)
@@ -55,7 +55,8 @@ export class AutoForm {
                     return fmt
                 } else if (['string', 'number'].includes(typeof (value[0]))) {
                     fmt.componentType = 'select'
-                    fmt.nested = value
+                    fmt.options = value
+                    fmt.attributes = {multiple: 'multiple'}
                     return fmt
                 } else {
                     // arrays of other types aren't handled
@@ -77,7 +78,7 @@ export class AutoForm {
         }
     }
 
-    private renderField(fieldName: string, fmt: FieldMetaData, value: any): HTMLElement {
+    private renderField(fieldName: string, fmt: FieldMetaData, value: any, parents: string[]): HTMLElement {
 
         let node: HTMLElement
         const block = ce('div')
@@ -89,24 +90,24 @@ export class AutoForm {
             case 'input':
                 node = ce('input')
                 node.setAttribute('ref', fieldName)
-                block.appendChild(node)
                 break
             case 'date':
                 node = ce('input')
                 node.setAttribute('ref', fieldName)
                 node.setAttribute('type', 'date')
-                block.appendChild(node)
                 break
-            case 'table':
+            case 'table': {
                 node = ce('span')
+                const header = ce('h' + parents.length + 1)
+                // @ts-ignore
+                header.innerText = this.textTranslator(fmt.label)
                 node.innerText = 'unimplemented'
                 // TODO
-                block.appendChild(node)
                 break
+            }
             case 'select':
                 node = ce('select')
                 node.setAttribute('ref', fieldName)
-                block.appendChild(node)
                 // @ts-ignore
                 fmt.options.forEach((o: any) => {
                     const option = ce('option') as HTMLOptionElement
@@ -133,12 +134,11 @@ export class AutoForm {
                     node.setAttribute('type', 'checkbox')
                     node.setAttribute('ref', fieldName)
                 }
-                block.appendChild(node)
                 break
             case 'radio':
                 node = ce('span')
                 // @ts-ignore
-                node.addClass('radio-button-set')
+                node.className = 'radio-button-set'
                 if (fmt.options) {
                     // @ts-ignore
                     fmt.options.forEach((o: any) => {
@@ -155,20 +155,25 @@ export class AutoForm {
                     node = ce('input')
                     node.setAttribute('type', 'checkbox')
                 }
-                block.appendChild(node)
                 break
             case 'textarea':
                 node = ce('textarea')
-                block.appendChild(node)
                 break
             case 'object':
+                node = ce('div')
+                // @ts-ignore
+                node.className = 'nested'
+                const header = ce('h' + parents.length + 1)
+                // @ts-ignore
+                header.innerText = this.textTranslator(fmt.label)
+                this.renderFields(node, value, parents.concat(fieldName))
+                break
             default:
                 node = ce('input')
-                block.appendChild(node)
-
         }
         // @ts-ignore
-        node && Object.entries(fmt.attributes || {}).forEach(([k, v]) => node.setAttribute(k, v))
+        Object.entries(fmt.attributes || {}).forEach(([k, v]) => node.setAttribute(k, v))
+        block.appendChild(node)
 
         return block
     }

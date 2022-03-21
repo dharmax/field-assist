@@ -5,107 +5,112 @@
     <title>Example</title>
 </head>
 <body>
+<div style="display:grid; grid-template-columns: 1fr 1fr">
+    <section class="form" onchange="printChangedField()">
+        <label>Display Name: (english alpha only)
+            <input ref="name" type="text" pattern="[a-zA-Z ]*">
+        </label>
+        <div>
+            <input type="radio" name="status" ref="status" value="single">Single
+            <input type="radio" name="status" ref="status" value="married">Married
+            <input type="radio" name="status" ref="status" value="divorced">Divorced
+        </div>
+        <div class="bio">
+            <label>About myself <br>
+                <textarea ref="generalBio" cols="30" rows="10"></textarea>
+            </label><br>
+        </div>
+        <div class="main-language">
+            <label>Main Language
+                <select autocomplete="on" ref="preferences.language.default">
+                    <option value="English">English</option>
+                    <option value="German">German</option>
+                    <option value="French">French</option>
+                </select>
+            </label>
+        </div>
+        <div class="custom-validator">
+            <label>Custom Validator (up to ten)
+                <input type="number" name="num" ref="upToTen" validator="(v)=> v < 10 ">
+            </label>
+        </div>
+        <div class="colors">
+            <label>Preferred colors
+                <select name="colors" multiple ref="selections.colors">
+                    <option value="blue">Blue</option>
+                    <option value="orange">Orange</option>
+                    <option value="teal">Teal</option>
+                </select>
+            </label>
+        </div>
 
-<section class="form" onchange="printChangedField()">
-    <label>Display Name: (english alpha only)
-        <input ref="name" type="text" pattern="[a-zA-Z ]*">
-    </label>
-    <div>
-        <input type="radio" name="status" ref="status" value="single">Single
-        <input type="radio" name="status" ref="status" value="married">Married
-        <input type="radio" name="status" ref="status" value="divorced">Divorced
-    </div>
-    <div class="bio">
-        <label>About myself <br>
-            <textarea ref="generalBio" cols="30" rows="10"></textarea>
-        </label><br>
-    </div>
-    <div class="main-language">
-        <label>Main Language
-            <select autocomplete="on" ref="preferences.language.default">
-                <option value="English">English</option>
-                <option value="German">German</option>
-                <option value="French">French</option>
-            </select>
-        </label>
-    </div>
-    <div class="custom-validator">
-        <label>Custom Validator (up to ten)
-            <input type="number" name="num" ref="upToTen" validator="(v)=> v < 10 ">
-        </label>
-    </div>
-    <div class="colors">
-        <label>Preferred colors
-            <select name="colors" multiple ref="selections.colors">
-                <option value="blue">Blue</option>
-                <option value="orange">Orange</option>
-                <option value="teal">Teal</option>
-            </select>
-        </label>
-    </div>
+        <div class="pets">
+            <label>
+                <p>Simple (boolean) checkbox</p>
+                <input type="checkbox" ref="amIGood">
 
-    <div class="pets">
-        <label>
-            <p>Simple (boolean) checkbox</p>
-            <input type="checkbox" ref="amIGood">
-
-        </label>
-        <label>Pets
-            <p>Multiple selection checkbox</p>
-            <span>
+            </label>
+            <label>Pets
+                <p>Multiple selection checkbox</p>
+                <span>
             <input type="checkbox" ref="pets" value="dogs">dogs
             <input type="checkbox" ref="pets" value="cats">cats
             </span>
-        </label>
-        <label>Monsters
-            <p>You are not allowed to choose monsters</p>
-            <span>
+            </label>
+            <label>Monsters
+                <p>You are not allowed to choose monsters</p>
+                <span>
             <input type="checkbox" ref="monsters" value="shrek">shrek
             <input type="checkbox" ref="monsters" value="godzila">Godzila
             </span>
+            </label>
+        </div>
+        <div class="one-thing">
+            <label>Single Select
+                <select name="material" ref="material">
+                    <option value="steel">Steal</option>
+                    <option value="plastic">Plastic</option>
+                    <option value="glass">Glass</option>
+                </select>
+
+            </label>
+        </div>
+        Scent <input type="text" ref="selections.scent">
+        <div class="times">
+            <input type="date" ref="date">
+            <input type="datetime-local" ref="datetime">
+
+        </div>
+        <p>
+            <button id="sendAll" onclick="sendAll();">Send All</button>
+        </p>
+        <label class="errors">
+            Illegal values:
+            <pre id="errors"></pre>
         </label>
-    </div>
-    <div class="one-thing">
-        <label>Single Select
-            <select name="material" ref="material">
-                <option value="steel">Steal</option>
-                <option value="plastic">Plastic</option>
-                <option value="glass">Glass</option>
-            </select>
-
-        </label>
-    </div>
-    Scent <input type="text" ref="selections.scent">
-    <div class="times">
-        <input type="date" ref="date">
-        <input type="datetime-local" ref="datetime">
-
-    </div>
-    <p>
-        <button id="sendAll" onclick="sendAll();">Send All</button>
-    </p>
-    <label class="errors">
-        Illegal values:
-        <pre id="errors"></pre>
-    </label>
-    <pre id="console"></pre>
-</section>
-<h1>Auto-form</h1>
-<button onclick="createForm()">Create Form</button>
-<section class="autoform">
-
-</section>
+        <pre id="console"></pre>
+    </section>
+    <section>
+        <h1>Auto-form</h1>
+        <button onclick="createForm()">Create Form</button>
+        <div class="autoform"></div>
+    </section>
+</div>
 </body>
 <style>
     section.form {
         margin: 5em;
         display: flex;
         flex-direction: column;
-
     }
 
     button {
         width: 10em;
+    }
+
+    .nested {
+        padding-left: 4em;
+
     }
 
     label {
@@ -123,7 +128,7 @@
         color: red;
     }
 
-    .autoform form div {
+    .autoform form > div {
         padding: 2px;
         display: grid;
         grid-template-columns: 12em 20em;
@@ -181,7 +186,7 @@
     }
 
     window.createForm = () => {
-        const form = new AutoForm(values)
+        const form = new AutoForm()
 
         //  test user metadata
         form.metaData.pets = {
@@ -192,9 +197,16 @@
         form.metaData.status = {
             componentType: 'radio',
             options: [{value: 'single', text: 'Single'}, 'married', 'divorced']
-        }        // TODO add support for tables
+        }
+        // TODO add support for tables
         // TODO add support for nested objects
-        const formNode = form.render(document.body.querySelector('.autoform'))
+        form.metaData.preferences = {
+            language: {
+                componentType: 'select',
+                options: ['German', 'English', 'French']
+            }
+        }
+        const formNode = form.render(values, document.body.querySelector('.autoform'))
         populateFields(formNode, values)
 
     }

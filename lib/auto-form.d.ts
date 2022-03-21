@@ -1,5 +1,4 @@
 export declare class AutoForm {
-    private data;
     metaData: FormMetaData;
     /**
      * change this for supporting translation of labels
@@ -7,10 +6,15 @@ export declare class AutoForm {
      */
     textTranslator: (s: string) => string;
     readonly form: HTMLFormElement;
-    constructor(data: any, metaData?: FormMetaData);
-    render(root?: HTMLElement): HTMLFormElement;
+
+    constructor(metaData?: FormMetaData);
+
+    render(data: any, root?: HTMLElement): HTMLFormElement;
+
     private renderFields;
+
     getFieldMetaData(fieldName: string, value: any, parents: string[]): FieldMetaData;
+
     private renderField;
     private guessType;
 }
