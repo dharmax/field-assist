@@ -92,7 +92,7 @@
     </section>
     <section>
         <h1>Auto-form</h1>
-        <button onclick="createForm()">Create Form</button>
+<!--        <button onclick="createForm()">Create Form</button>-->
         <div class="autoform"></div>
     </section>
 </div>
@@ -185,25 +185,31 @@
 
     }
 
-    window.createForm = () => {
+    createForm()
+
+    function createForm() {
         const form = new AutoForm()
 
         //  test user metadata
         form.metaData.pets = {
-            label: 'PETS',
-            componentType: 'select',
+            label: 'Favourite pets',
+            componentType: 'checkbox',
             options: ['Cats', 'Dogs']
         }
         form.metaData.status = {
             componentType: 'radio',
             options: [{value: 'single', text: 'Single'}, 'married', 'divorced']
         }
+        form.metaData.generalBio = {
+            componentType: 'textarea',
+        }
         // TODO add support for tables
-        // TODO add support for nested objects
         form.metaData.preferences = {
-            language: {
-                componentType: 'select',
-                options: ['German', 'English', 'French']
+            nested: {
+                language: {
+                    componentType: 'select',
+                    options: ['German', 'English', 'French']
+                }
             }
         }
         const formNode = form.render(values, document.body.querySelector('.autoform'))

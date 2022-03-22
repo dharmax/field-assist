@@ -6,15 +6,10 @@ export declare class AutoForm {
      */
     textTranslator: (s: string) => string;
     readonly form: HTMLFormElement;
-
     constructor(metaData?: FormMetaData);
-
     render(data: any, root?: HTMLElement): HTMLFormElement;
-
     private renderFields;
-
     getFieldMetaData(fieldName: string, value: any, parents: string[]): FieldMetaData;
-
     private renderField;
     private guessType;
 }
@@ -26,7 +21,7 @@ export declare type FieldMetaData = FormMetaData | {
     validator?: (value: any) => boolean;
     tooltip?: string;
     helpText?: string;
-    componentType: string;
+    componentType: 'table' | 'textarea' | 'checkbox' | 'date' | 'number' | 'radio' | 'input' | 'select' | 'object';
     attributes?: {
         [name: string]: string;
     };

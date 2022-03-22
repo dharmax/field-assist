@@ -32,7 +32,9 @@ export class AutoForm {
     getFieldMetaData(fieldName: string, value: any, parents: string[]): FieldMetaData {
 
         const self = this
-        return findFMD(this.metaData, parents) || createFMD()
+        const autoFmd = createFMD()
+        const fmt = findFMD(this.metaData, parents)
+        return fmt ? {...autoFmd, ...fmt} : autoFmd
 
         function findFMD(meta: FormMetaData, parentsList: string[]): FieldMetaData {
             if (!parentsList.length)
@@ -87,15 +89,17 @@ export class AutoForm {
         // @ts-ignore
         label.textContent = fmt.label
         switch (fmt.componentType) {
-            case 'input':
+            case 'input': {
                 node = ce('input')
                 node.setAttribute('ref', fieldName)
                 break
-            case 'date':
+            }
+            case 'date': {
                 node = ce('input')
                 node.setAttribute('ref', fieldName)
                 node.setAttribute('type', 'date')
                 break
+            }
             case 'table': {
                 node = ce('span')
                 const header = ce('h' + parents.length + 1)
@@ -105,7 +109,7 @@ export class AutoForm {
                 // TODO
                 break
             }
-            case 'select':
+            case 'select': {
                 node = ce('select')
                 node.setAttribute('ref', fieldName)
                 // @ts-ignore
@@ -116,18 +120,18 @@ export class AutoForm {
                     option.setAttribute('value', o.value || o)
                 })
                 break
-
-            case 'checkbox':
-                node = ce('span')
+            }
+            case 'checkbox': {
                 if (fmt.options) {
+                    node = ce('span')
                     // @ts-ignore
                     fmt.options.forEach((o: any) => {
                         const option = ce('input') as HTMLOptionElement
-                        option.setAttribute('type', 'checkbox')
                         node.appendChild(option)
-                        option.innerText = this.textTranslator(o.text || o)
+                        option.setAttribute('type', 'checkbox')
                         option.setAttribute('value', o.value || o)
-                        node.setAttribute('ref', fieldName)
+                        option.setAttribute('ref', [...parents, fieldName].join('.'))
+                        option.innerText = this.textTranslator(o.text || o)
                     })
                 } else {
                     node = ce('input')
@@ -135,7 +139,8 @@ export class AutoForm {
                     node.setAttribute('ref', fieldName)
                 }
                 break
-            case 'radio':
+            }
+            case 'radio': {
                 node = ce('span')
                 // @ts-ignore
                 node.className = 'radio-button-set'
@@ -145,6 +150,7 @@ export class AutoForm {
                         const option = ce('input') as HTMLOptionElement
                         option.setAttribute('type', 'radio')
                         option.setAttribute('name', fieldName)
+                        option.setAttribute('ref', [...parents, fieldName].join('.'))
                         node.appendChild(option)
                         const text = ce('span')
                         node.appendChild(text)
@@ -156,10 +162,12 @@ export class AutoForm {
                     node.setAttribute('type', 'checkbox')
                 }
                 break
-            case 'textarea':
+            }
+            case 'textarea': {
                 node = ce('textarea')
                 break
-            case 'object':
+            }
+            case 'object': {
                 node = ce('div')
                 // @ts-ignore
                 node.className = 'nested'
@@ -168,6 +176,7 @@ export class AutoForm {
                 header.innerText = this.textTranslator(fmt.label)
                 this.renderFields(node, value, parents.concat(fieldName))
                 break
+            }
             default:
                 node = ce('input')
         }
@@ -206,7 +215,7 @@ export type FieldMetaData = FormMetaData | {
     validator?: (value: any) => boolean
     tooltip?: string
     helpText?: string
-    componentType: string
+    componentType: 'table' | 'textarea' | 'checkbox' | 'date' | 'number' | 'radio' | 'input' | 'select' | 'object';
     attributes?: { [name: string]: string }
     defaultValue?: any
     nested?: any[] | object
@@ -215,6 +224,21 @@ export type FieldMetaData = FormMetaData | {
 
 }
 
-function ce(e: string): HTMLElement {
-    return document.createElement(e)
+function cie(type: string, name: string, value?: string) {
+    const el = document.createElement('input')
+    el.setAttribute('type', type)
+    value && el.setAttribute('value', value)
+    return el
+}
+
+function ce(e: string, className?: string): HTMLElement {
+    const el = document.createElement(e)
+    className && (el.className = className)
+    return el
+}
+
+function CE(type: string, ...children: HTMLElement[]): HTMLElement[] {
+    const e = ce(type)
+    children.forEach(c => e.appendChild(c))
+    return [e, ...children]
 }
