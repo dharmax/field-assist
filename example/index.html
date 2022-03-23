@@ -5,8 +5,8 @@
     <title>Example</title>
 </head>
 <body>
-<div style="display:grid; grid-template-columns: 1fr 1fr">
-    <section class="form" onchange="printChangedField()">
+<div class="demo">
+    <section id="manual" class="form" onchange="printChangedField()">
         <label>Display Name: (english alpha only)
             <input ref="name" type="text" pattern="[a-zA-Z ]*">
         </label>
@@ -81,23 +81,31 @@
             <input type="datetime-local" ref="datetime">
 
         </div>
-        <p>
-            <button id="sendAll" onclick="sendAll();">Send All</button>
-        </p>
-        <label class="errors">
-            Illegal values:
-            <pre id="errors"></pre>
-        </label>
-        <pre id="console"></pre>
     </section>
-    <section>
+    <section id="automatic">
         <h1>Auto-form</h1>
-<!--        <button onclick="createForm()">Create Form</button>-->
+        <!--        <button onclick="createForm()">Create Form</button>-->
         <div class="autoform"></div>
+
     </section>
+</div>
+<div>
+    <p>
+        <button id="sendAll" onclick="sendAll();">Send All</button>
+    </p>
+    <label class="errors">
+        Illegal values:
+        <pre id="errors"></pre>
+    </label>
+    <pre id="console"></pre>
 </div>
 </body>
 <style>
+    .demo {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
     section.form {
         margin: 5em;
         display: flex;
@@ -152,7 +160,7 @@
     }
 
 
-    populateFields(document.body, values)
+    populateFields(document.getElementById('manual'), values)
     disable(document.body)
     setTimeout(() => {
         disable(document.body, false)
@@ -177,14 +185,6 @@
     }
 
 
-    window.sendAll = () => {
-
-        const allFields = collectValues(document.body)
-        console.dir(allFields)
-        consoleDiv.textContent = JSON.stringify(allFields);
-
-    }
-
     createForm()
 
     function createForm() {
@@ -205,15 +205,31 @@
         }
         // TODO add support for tables
         form.metaData.preferences = {
-            nested: {
-                language: {
+            language: {
+                default: {
+                    label: 'Main language',
                     componentType: 'select',
                     options: ['German', 'English', 'French']
                 }
             }
         }
-        const formNode = form.render(values, document.body.querySelector('.autoform'))
+        const formNode = form.render(values, document.getElementById('automatic'))
         populateFields(formNode, values)
+
+
+    }
+
+    window.sendAll = () => {
+
+        const fields1 = collectValues(document.getElementById('manual'))
+        console.log('Manual form results')
+        console.dir(fields1)
+
+        const fields2 = collectValues(document.getElementById('automatic'))
+        console.log('Automatic form results')
+        console.dir(fields2)
+
+        consoleDiv.textContent = JSON.stringify(fields1) + '\n' + JSON.stringify(fields2)
 
     }
     window.printChangedField = function () {

@@ -9,7 +9,7 @@ export declare class AutoForm {
     constructor(metaData?: FormMetaData);
     render(data: any, root?: HTMLElement): HTMLFormElement;
     private renderFields;
-    getFieldMetaData(fieldName: string, value: any, parents: string[]): FieldMetaData;
+    getFieldMetaData(fieldName: string, value: any, _parents: string[]): FieldMetaData;
     private renderField;
     private guessType;
 }
