@@ -1,3 +1,9 @@
+/**
+ * This class generate forms out of raw data and optional meta-data.
+ * It supports automatic translation (of labels and display values).
+ * It generates raw DOM elements without styling, so it is your responsibility to style it (which is very easy).
+ *
+ */
 export class AutoForm {
 
     /**
@@ -6,15 +12,29 @@ export class AutoForm {
      */
     textTranslator = (s: string) => s
 
+    /**
+     * The generated form.
+     */
     readonly form: HTMLFormElement
 
+    /**
+     * You can provide the metadata right in the constructor or anytime before rendering
+     * @param metaData the metadata
+     * @see FormMetaData
+     */
     constructor(public metaData: FormMetaData = {}) {
         const form = ce('form')
         form.className = 'autoform'
         this.form = form as HTMLFormElement
     }
 
-    render(data: any, root?: HTMLElement) {
+    /**
+     * This method does the DOM element creation
+     * @param data the data by which to "guess" the form
+     * @param root optionally, you can tell it to render right into that element
+     * @return the generated form
+     */
+    render(data: any, root?: HTMLElement): HTMLFormElement {
         this.renderFields(this.form, data)
         root?.appendChild(this.form)
         return this.form
@@ -30,7 +50,7 @@ export class AutoForm {
         }
     }
 
-    getFieldMetaData(fieldName: string, value: any, _parents: string[]): FieldMetaData {
+    private getFieldMetaData(fieldName: string, value: any, _parents: string[]): FieldMetaData {
 
         const self = this
         const autoFmd = createFMD()
