@@ -5,97 +5,120 @@
     <title>Example</title>
 </head>
 <body>
-
-<section class="form">
-    <label>Display Name: (english alpha only)
-        <input ref="name" type="text" pattern="[a-zA-Z ]*">
-    </label>
-    <div>
-        <input type="radio" name="status" ref="status" value="single">Single
-        <input type="radio" name="status" ref="status" value="married">Married
-        <input type="radio" name="status" ref="status" value="divorced">Divorced
-    </div>
-    <div class="bio">
-        <label>About myself <br>
-            <textarea ref="generalBio" cols="30" rows="10"></textarea>
-        </label><br>
-    </div>
-    <div class="main-language">
-        <label>Main Language
-            <select autocomplete="on" ref="preferences.language.default">
-                <option value="English">English</option>
-                <option value="German">German</option>
-                <option value="French">French</option>
-            </select>
+<div class="demo">
+    <section id="manual" class="form" onchange="printChangedField()">
+        <label>Display Name: (english alpha only)
+            <input ref="name" type="text" pattern="[a-zA-Z ]*">
         </label>
-    </div>
-    <div class="colors">
-        <label>Preferred colors
-            <select name="colors" multiple ref="selections.colors">
-                <option value="blue">Blue</option>
-                <option value="orange">Orange</option>
-                <option value="teal">Teal</option>
-            </select>
-        </label>
-    </div>
+        <div>
+            <input type="radio" name="status" ref="status" value="single">Single
+            <input type="radio" name="status" ref="status" value="married">Married
+            <input type="radio" name="status" ref="status" value="divorced">Divorced
+        </div>
+        <div class="bio">
+            <label>About myself <br>
+                <textarea ref="generalBio" cols="30" rows="10"></textarea>
+            </label><br>
+        </div>
+        <div class="main-language">
+            <label>Main Language
+                <select autocomplete="on" ref="preferences.language.default">
+                    <option value="English">English</option>
+                    <option value="German">German</option>
+                    <option value="French">French</option>
+                </select>
+            </label>
+        </div>
+        <div class="custom-validator">
+            <label>Custom Validator (up to ten)
+                <input type="number" name="num" ref="upToTen" validator="(v)=> v < 10 ">
+            </label>
+        </div>
+        <div class="colors">
+            <label>Preferred colors
+                <select name="colors" multiple ref="selections.colors">
+                    <option value="blue">Blue</option>
+                    <option value="orange">Orange</option>
+                    <option value="teal">Teal</option>
+                </select>
+            </label>
+        </div>
 
-    <div class="pets">
-        <label>
-            <p>Simple (boolean) checkbox</p>
-            <input type="checkbox" ref="amIGood">
+        <div class="pets">
+            <label>
+                <p>Simple (boolean) checkbox</p>
+                <input type="checkbox" ref="amIGood">
 
-        </label>
-        <label>Pets
-            <p>Multiple selection checkbox</p>
-            <span>
+            </label>
+            <label>Pets
+                <p>Multiple selection checkbox</p>
+                <span>
             <input type="checkbox" ref="pets" value="dogs">dogs
             <input type="checkbox" ref="pets" value="cats">cats
             </span>
-        </label>
-        <label>Monsters
-            <p>You are not allowed to choose monsters</p>
-            <span>
+            </label>
+            <label>Monsters
+                <p>You are not allowed to choose monsters</p>
+                <span>
             <input type="checkbox" ref="monsters" value="shrek">shrek
             <input type="checkbox" ref="monsters" value="godzila">Godzila
             </span>
-        </label>
-    </div>
-    <div class="one-thing">
-        <label>Single Select
-            <select name="material" ref="material">
-                <option value="steel">Steal</option>
-                <option value="plastic">Plastic</option>
-                <option value="glass">Glass</option>
-            </select>
+            </label>
+        </div>
+        <div class="one-thing">
+            <label>Single Select
+                <select name="material" ref="material">
+                    <option value="steel">Steal</option>
+                    <option value="plastic">Plastic</option>
+                    <option value="glass">Glass</option>
+                </select>
 
-        </label>
-    </div>
-    Scent <input type="text" ref="selections.scent">
-    <div class="times">
-        <input type="date" ref="date">
-        <input type="datetime-local" ref="datetime">
+            </label>
+        </div>
+        Scent <input type="text" ref="selections.scent">
+        <div class="times">
+            <input type="date" ref="date">
+            <input type="datetime-local" ref="datetime">
 
-    </div>
+        </div>
+    </section>
+    <section id="automatic">
+        <h1>Auto-form</h1>
+        <!--        <button onclick="createForm()">Create Form</button>-->
+        <div class="autoform"></div>
+
+    </section>
+</div>
+<div>
     <p>
-        <button>Send All</button>
+        <button id="sendAll" onclick="sendAll();">Send All</button>
     </p>
     <label class="errors">
         Illegal values:
         <pre id="errors"></pre>
     </label>
     <pre id="console"></pre>
-</section>
+</div>
 </body>
 <style>
+    .demo {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
     section.form {
         margin: 5em;
         display: flex;
         flex-direction: column;
-
     }
 
     button {
         width: 10em;
+    }
+
+    .nested {
+        padding-left: 4em;
+
     }
 
     label {
@@ -112,9 +135,16 @@
     .errors {
         color: red;
     }
+
+    .autoform form > div {
+        padding: 2px;
+        display: grid;
+        grid-template-columns: 12em 20em;
+    }
 </style>
 <script type="module">
     import {populateFields, collectValues, getFieldAndValue, disable} from "../lib/field-assist.js";
+    import {AutoForm} from "../lib/auto-form.js";
 
     const values = {
         name: 'Albert Einstein',
@@ -125,10 +155,12 @@
         date: new Date('Nov 5 1968'),
         time: '',
         selections: {colors: ['orange', 'blue'], scent: 'great'},
-        material: 'plastic'
+        material: 'plastic',
+        upToTen: 2
     }
 
-    populateFields(document.body, values)
+
+    populateFields(document.getElementById('manual'), values)
     disable(document.body)
     setTimeout(() => {
         disable(document.body, false)
@@ -152,21 +184,58 @@
         }
     }
 
-    document.body.oninput = (event) => {
-        // this option used to update a single field - just what was changed
-        const {field, value} = getFieldAndValue(event);
-        console.dir({[field]: value})
-        consoleDiv.textContent = JSON.stringify({[field]: value});
 
-        showErrors();
+    createForm()
+
+    function createForm() {
+        const form = new AutoForm()
+
+        //  test user metadata
+        form.metaData.pets = {
+            label: 'Favourite pets',
+            componentType: 'checkbox',
+            options: ['Cats', 'Dogs']
+        }
+        form.metaData.status = {
+            componentType: 'radio',
+            options: [{value: 'single', text: 'Single'}, 'married', 'divorced']
+        }
+        form.metaData.generalBio = {
+            componentType: 'textarea',
+        }
+        // TODO add support for tables
+        form.metaData.preferences = {
+            language: {
+                default: {
+                    label: 'Main language',
+                    componentType: 'select',
+                    options: ['German', 'English', 'French']
+                }
+            }
+        }
+        const formNode = form.render(values, document.getElementById('automatic'))
+        populateFields(formNode, values)
+
 
     }
-    document.body.querySelector('button').onclick = () => {
-        const allFields = collectValues(document.body)
-        console.dir(allFields)
-        consoleDiv.textContent = JSON.stringify(allFields);
+
+    window.sendAll = () => {
+
+        const fields1 = collectValues(document.getElementById('manual'))
+        console.log('Manual form results')
+        console.dir(fields1)
+
+        const fields2 = collectValues(document.getElementById('automatic'))
+        console.log('Automatic form results')
+        console.dir(fields2)
+
+        consoleDiv.textContent = JSON.stringify(fields1) + '\n' + JSON.stringify(fields2)
 
     }
+    window.printChangedField = function () {
+        console.log(getFieldAndValue(window.event))
+    }
+
 
 </script>
 

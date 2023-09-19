@@ -32,7 +32,7 @@ export declare function refNodes(node: Element, keyFieldName?: string): {
  * @param context optional context for the collectValue inner call
  * @param keyFieldName optional alternative to the "ref" attribute name
  */
-export declare function getFieldAndValue(event: Event, context?: any, keyFieldName?: string): {
+export declare function getFieldAndValue(event: Event | HTMLElement, context?: any, keyFieldName?: string): {
     field: string;
     value: any;
 };

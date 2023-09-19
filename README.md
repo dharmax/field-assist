@@ -1,25 +1,36 @@
 # Field-Assist
-**TL;DR** : just write `collectValues(myFormNode)` and get a proper JSON with all the values in all the input fields. There
-are more related goodies there, see below + demo or the example. 
 
-[Live Demo](https://stackblitz.com/edit/field-assist-demo?file=index.ts)
+**TL;DR** : Two functions:
+
+1. just write `collectValues(myFormNode)` and get a proper JSON with all the values in all the input fields. There are
+   more related goodies there, see below + demo or the example.
+
+2. Just write `const form = new AutoForm(); form.render(values, document.body);` and get an HTML form for your data (of
+   course you can customize it, @see FormMetaData)
 
 ## Install
+
 `npm install field-assist`
 
 ## API documentation
-[Full API documentation](./api.md)
 
-*Note that there's a TypeScript declaration file, too.*
- 
+[Full API documentation](./api.md) (dosn't yet include the auto-form)
+
+Also, see the robust, yet simple example in example/index.html.
+
+*Note that there's a TypeScript declaration file, too.
 
 ## General
-This cute library makes working with input fields, inside or outside of forms, very easy, fun, readable and extremely simple.
-It's super light and has no dependencies, and it is TypeScript ready out of the box.   
+
+This cute library makes working with input fields, inside or outside of forms, very easy, fun, readable and extremely
+simple. It's super light and has no dependencies, and it is TypeScript ready out of the box.
 
 It's main function is, perhaps, `collectValues( baseElement)` that basically does the following:
-1. Recursively collect all the values from any input fields under the baseElement that have a `ref` attribute (with a logical name as a value).
-1. Places them in a simple map, where the ref value is the entry's key, where its  is the **normalized** from the input field.
+
+1. Recursively collect all the values from any input fields under the baseElement that have a `ref` attribute (with a
+   logical name as a value).
+1. Places them in a simple map, where the ref value is the entry's key, where its is the **normalized** from the input
+   field.
 1. Validates the values and create an error object (the "_error") in the returned map
 
 ## Features

@@ -32,8 +32,11 @@ function normalizeValue(e: HTMLInputElement, context: any) {
     if (customValidator) {
         const validationFunction = eval(customValidator.toString());
         isValid = validationFunction(value, context)
+        e.setCustomValidity(isValid ? "" : "Invalid value")
     } else
         isValid = !e.validity || e.validity.valid
+
+    e.reportValidity()
     return {value, isValid, skip: false};
 }
 
@@ -120,8 +123,8 @@ export function refNodes(node: Element, keyFieldName = DEFAULT_KEY_FIELDNAME): {
  * @param context optional context for the collectValue inner call
  * @param keyFieldName optional alternative to the "ref" attribute name
  */
-export function getFieldAndValue(event: Event, context?: any, keyFieldName = DEFAULT_KEY_FIELDNAME): { field: string, value: any } {
-    let target = event.target as HTMLElement;
+export function getFieldAndValue(event: Event | HTMLElement, context?: any, keyFieldName = DEFAULT_KEY_FIELDNAME): { field: string, value: any } {
+    let target = event instanceof HTMLElement ? event : event.target as HTMLElement
     if (!target.getAttribute(keyFieldName))
         target = target.parentNode as HTMLElement
     const fieldName = target.getAttribute(keyFieldName) as string
