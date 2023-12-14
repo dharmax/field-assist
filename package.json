@@ -1,12 +1,13 @@
 {
   "name": "field-assist",
-  "version": "3.0.1",
+  "version": "4.0.1",
   "description": "Making reading/populating input fields easy and  fun",
   "main": "lib/field-assist.js",
+  "module": "lib/field-assist.js",
   "types": "lib/field-assist.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
+    "build": "npx tsc",
     "prepare": "npm run build"
   },
   "repository": {
@@ -28,6 +29,6 @@
   },
   "homepage": "https://github.com/dharmax/field-assist",
   "devDependencies": {
-    "typescript": "^4.0.5"
+    "typescript": "^5.3.3"
   }
 }
