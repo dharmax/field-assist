@@ -15,14 +15,12 @@ export declare class AutoForm {
      * The generated form.
      */
     readonly form: HTMLFormElement;
-
     /**
      * You can provide the metadata right in the constructor or anytime before rendering
      * @param metaData the metadata
      * @see FormMetaData
      */
     constructor(metaData?: FormMetaData);
-
     /**
      * This method does the DOM element creation
      * @param data the data by which to "guess" the form
@@ -30,16 +28,16 @@ export declare class AutoForm {
      * @return the generated form
      */
     render(data: any, root?: HTMLElement): HTMLFormElement;
-
     private renderFields;
     private getFieldMetaData;
     private renderField;
     private guessType;
 }
-export declare type FormMetaData = {
+
+export type FormMetaData = {
     [fieldName: string]: FieldMetaData;
 };
-export declare type FieldMetaData = FormMetaData | {
+export type FieldMetaData = FormMetaData | {
     label: string;
     validator?: (value: any) => boolean;
     tooltip?: string;
