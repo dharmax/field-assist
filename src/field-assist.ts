@@ -148,6 +148,7 @@ export function populateField(node: HTMLInputElement, value: string | number | b
                 node.checked = !!value
                 break;
             }
+            // don't break on purpose
         }
         case 'radio': {
             // @ts-ignore
