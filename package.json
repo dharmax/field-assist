@@ -2,8 +2,8 @@
   "name": "field-assist",
   "version": "3.0.1",
   "description": "Making reading/populating input fields easy and  fun",
-  "main": "lib/field-assist.js",
-  "types": "lib/field-assist.d.ts",
+  "main": "index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npx tsc",
