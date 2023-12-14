@@ -33,7 +33,6 @@ export declare class AutoForm {
     private renderField;
     private guessType;
 }
-
 export type FormMetaData = {
     [fieldName: string]: FieldMetaData;
 };
