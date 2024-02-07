@@ -24,7 +24,7 @@ function normalizeValue(e: HTMLInputElement, context: any) {
                 return {skip: true}
             break
         default:
-            value = e.nodeValue || e.getAttribute('value') || e['value'] || e.textContent
+            value = e.nodeValue || e['value'] || e.textContent
     }
 
     const customValidator = e.getAttribute('validator')
