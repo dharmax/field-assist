@@ -1,536 +1,224 @@
 const DEFAULT_KEY_FIELDNAME = 'ref'
 
 function normalizeValue(e: HTMLInputElement, context: any) {
-
     let value
     switch (e.type) {
-        case 'select-multiple':
-            value = getMultiSelect(e)
-            break
-        case 'checkbox':
-            // @ts-ignore
-            const siblings = e.parentElement.parentElement.querySelectorAll(`[ref="${e.getAttribute(DEFAULT_KEY_FIELDNAME)}"]`) || []
-            if (siblings.length < 2)
-                value = !!e.checked
-            else {
-                // @ts-ignore
-                value = Array.from(siblings).filter(e => e.checked).map(e => e.value)
-            }
-            break
-        case 'radio':
-            if (!!e.checked)
-                value = e.value
-            else
-                return {skip: true}
-            break
-        default:
-            value = e.nodeValue || e.getAttribute('value') || e['value'] || e.textContent
-    }
-
-    const customValidator = e.getAttribute('validator')
-    let isValid
-    if (customValidator) {
-        const validationFunction = eval(customValidator.toString());
-        isValid = validationFunction(value, context)
-        e.setCustomValidity(isValid ? "" : "Invalid value")
-    } else
-        isValid = !e.validity || e.validity.valid
-
-    e.reportValidity()
-    return {value, isValid, skip: false};
-}
-
-
-/**
- * Looks for elements with the "ref" (or whatever other  attribute then returns a map with the values
- * inside those elements, with the string in the "ref" as the name.
- * It also mark invalid values with Invalid symbol.
- *
- * @return the fields and _errors field with the list of erroneous values
- * @param node start node to look within
- * @param context an optional context object that will be injected into a custom validator
- * @param keyFieldName optional alternative reference field name
- */
-export function collectValues(node: Element, context?: any, keyFieldName = DEFAULT_KEY_FIELDNAME): { [k: string]: any } {
-
-    const nodes = refs(node, keyFieldName)
-    const errors = {}
-
-    const results: any = nodes.reduce((result: any, element) => {
-        const fieldName = element.getAttribute(keyFieldName)
-        if (!fieldName)
-            return
-
-        const {value, isValid, skip} = normalizeValue(element, context);
-        if (skip)
-            return result
-
-        if (isValid)
-            setUsingDotReference(result, fieldName, value)
-        else {
-            setUsingDotReference(result, fieldName, Invalid)
-            // @ts-ignore
-            setUsingDotReference(errors, fieldName, {value, element})
-        }
-
-        return result
-    }, {})
-    if (Object.keys(errors).length)
-        results._errors = errors
-    return results
-
-}
-
-function getMultiSelect(e: HTMLElement) {
-    const values: any = []
-    e.querySelectorAll('option:checked').forEach(n =>
-        values.push(n.getAttribute('value')))
-    return values
-}
-
-/**
- *
- * @param node start search node
- * @param keyFieldName optional alternative reference field name
- * @return array of elements that have the "ref" attribute
- */
-export function refs(node: Element, keyFieldName = DEFAULT_KEY_FIELDNAME): HTMLInputElement[] {
-    const nodes = node.querySelectorAll(`[${keyFieldName}]`)
-    // @ts-ignore
-    return Array.of(...nodes) as HTMLInputElement[]
-}
-
-/**
- * @return elements map by the ref name
- * @param node
- * @param keyFieldName optional alternative reference field name
- */
-export function refNodes(node: Element, keyFieldName = DEFAULT_KEY_FIELDNAME): { [ref: string]: HTMLInputElement } {
-
-    const map: { [ref: string]: HTMLInputElement } = {}
-    const elements = refs(node, keyFieldName)
-    elements.reduce((a, c: HTMLElement) => {
-        // @ts-ignore
-        a[c.getAttribute(keyFieldName)] = c
-        return a
-    }, map)
-    return map
-}
-
-/**
- * Utility method that let you get the field name and value of the input field that is associated with an event
- * @param event the event
- * @param context optional context for the collectValue inner call
- * @param keyFieldName optional alternative to the "ref" attribute name
- */
-export function getFieldAndValue(event: Event | HTMLElement, context?: any, keyFieldName = DEFAULT_KEY_FIELDNAME): { field: string, value: any } {
-    let target = event instanceof HTMLElement ? event : event.target as HTMLElement
-    if (!target.getAttribute(keyFieldName))
-        target = target.parentNode as HTMLElement
-    const fieldName = target.getAttribute(keyFieldName) as string
-    const values = collectValues(target.parentNode as HTMLElement, context, keyFieldName)
-    const value = readUsingDotReference(values, fieldName)
-    return {field: fieldName, value};
-}
-
-/**
- * Populate a single field in a normalized way
- * @param node the field's node
- * @param value the value
- * @param error optional error object
- */
-export function populateField(node: HTMLInputElement, value: any, error?: any) {
-
-    const errorMsgNode = node.parentElement?.querySelector('.error-message') as HTMLElement
-
-    if (error) {
-        node.classList.add('is-invalid')
-        if (errorMsgNode) {
-            errorMsgNode.textContent = 'Invalid value' // Default or custom?
-            errorMsgNode.style.display = 'block'
-        }
-    } else {
-        node.classList.remove('is-invalid')
-        if (errorMsgNode) {
-            errorMsgNode.style.display = 'none'
-        }
-    }
-
-    switch (node.type) {
+        case 'select-multiple': value = getMultiSelect(e); break
         case 'checkbox': {
-            // @ts-ignore
-            const siblings = node.parentElement.parentElement.querySelectorAll(`[ref="${node.getAttribute(DEFAULT_KEY_FIELDNAME)}"]`) || []
-            if (siblings.length === 1) {
-                node.checked = !!value
-                break;
-            }
-            // don't break on purpose
+            const siblings = e.parentElement?.parentElement?.querySelectorAll(`[ref="${e.getAttribute(DEFAULT_KEY_FIELDNAME)}"]`) || []
+            if (siblings.length === 1) { value = e.checked; break }
+            value = Array.from(siblings).filter((s: any) => s.checked).map((s: any) => s.value)
+            break
         }
         case 'radio': {
-            // @ts-ignore
-            const siblings = node.parentElement.parentElement.querySelectorAll(`[ref="${node.getAttribute(DEFAULT_KEY_FIELDNAME)}"]`) || []
-            siblings.forEach(n =>
-                // @ts-ignore
-                n.checked = Array.isArray(value) ? value.includes(n.value) : n.value === value)
-
-            return
+            const siblings = e.parentElement?.parentElement?.querySelectorAll(`[ref="${e.getAttribute(DEFAULT_KEY_FIELDNAME)}"]`) || []
+            value = (Array.from(siblings).find((s: any) => s.checked) as HTMLInputElement)?.value
+            break
         }
-        case 'select-multiple':
-            // @ts-ignore
-            Array.from(node.children).forEach(option => option.selected = (value || []).indexOf(option.value) != -1)
-            return
-        case 'option':
-            // @ts-ignore
-            node.selected = Array.isArray(value) ? value.includes(nodeValue) : nodeValue === value
-            return
-        case 'textarea':
-            node.textContent = value.toString()
-            return
-        case 'date':
-            node.value = (value as String)?.slice(0, 10) || ''
-            return
-        case 'datetime-local':
-            node.value = (value as String)?.slice(0, 16) || ''
-            return
-        case 'select':
-        case 'select-one':
-        default:
-            node.value = value?.toString() || ''
+        default: value = e.value
+    }
+    if (e.getAttribute('type') === 'number') value = Number(value)
+    if (e.hasAttribute('validator')) {
+        const customValidator = e.getAttribute('validator')
+        if (customValidator) {
+            try {
+                const f = eval(customValidator.toString())
+                if (!f(value, context)) return Invalid
+            } catch (err) { console.error(`Field ${e.getAttribute(DEFAULT_KEY_FIELDNAME)} invalid validator`, err) }
+        }
+    }
+    return e.checkValidity() ? value : Invalid
+}
 
+const Invalid = Symbol('Invalid')
+function getMultiSelect(e: any) { return Array.from(e.options).filter((option: any) => option.selected).map((option: any) => option.value) }
+
+export function collectValues(node: HTMLElement, context?: any, keyFieldName = DEFAULT_KEY_FIELDNAME): { [ref: string]: any } {
+    const nodes = refNodes(node, keyFieldName)
+    const result: any = { _errors: {} }
+    for (let [ref, n] of Object.entries(nodes)) {
+        const value = normalizeValue(n as HTMLInputElement, context)
+        if (value === Invalid) result._errors[ref] = { node: n, value: (n as HTMLInputElement).value }
+        setUsingDotReference(result, ref, value)
+    }
+    if (Object.keys(result._errors).length === 0) delete result._errors
+    return result
+}
+
+function refNodes(node: HTMLElement, keyFieldName = DEFAULT_KEY_FIELDNAME): { [ref: string]: HTMLElement } {
+    const nodes = Array.from(node.querySelectorAll(`[${keyFieldName}]`))
+    const result: any = {}
+    nodes.forEach((n: any) => { result[n.getAttribute(keyFieldName)] = n })
+    return result
+}
+
+export function getFieldAndValue(event: Event | HTMLElement, context?: any, keyFieldName = DEFAULT_KEY_FIELDNAME): { field: string, value: any } {
+    const node = event instanceof HTMLElement ? event : event.target as HTMLInputElement
+    const field = node.getAttribute(keyFieldName) as string
+    return { field, value: normalizeValue(node as HTMLInputElement, context) }
+}
+
+export function populateField(node: HTMLInputElement, value: any, error?: any) {
+    const errorMsgNode = node.parentElement?.querySelector('.error-message') as HTMLElement
+    if (error) {
+        node.classList.add('is-invalid')
+        if (errorMsgNode) { errorMsgNode.textContent = 'Invalid value'; errorMsgNode.style.display = 'block' }
+    } else {
+        node.classList.remove('is-invalid')
+        if (errorMsgNode) errorMsgNode.style.display = 'none'
+    }
+    switch (node.type) {
+        case 'checkbox': {
+            const siblings = node.parentElement?.parentElement?.querySelectorAll(`[ref="${node.getAttribute(DEFAULT_KEY_FIELDNAME)}"]`) || []
+            if (siblings.length === 1) { node.checked = !!value; break }
+            node.checked = (value as string[] || []).includes(node.value)
+            break
+        }
+        case 'radio': { node.checked = node.value == value; break }
+        case 'select-multiple': {
+            const values = value as string[] || []
+            Array.from((node as any).options).forEach((option: any) => { option.selected = values.includes(option.value) })
+            break
+        }
+        default: node.value = value || ''
     }
 }
 
-/**
- * Populate a whole form from a map of field names and values
- * @param baseNode the base of the form (doesn't have to be a Form element)
- * @param values the values
- */
 export function populateFields(baseNode: HTMLElement, values: { [ref: string]: any }) {
     const fieldMap = refNodes(baseNode)
     const errors = values?._errors || {}
-
     for (let [ref, node] of Object.entries(fieldMap)) {
-        let value: any = readUsingDotReference(values, ref);
-        const error = readUsingDotReference(errors, ref);
-
-        if (value instanceof Date)
-            value = value.toISOString()
-        
-        if (value !== undefined && typeof value === 'object' && !Array.isArray(value) && value !== null) {
-            // This happens if the ref points to an object rather than a leaf value
-            continue;
-        }
-        
-        populateField(node, value, error)
+        let value: any = readUsingDotReference(values, ref)
+        const error = readUsingDotReference(errors, ref)
+        if (value instanceof Date) value = value.toISOString()
+        if (value !== undefined && typeof value === 'object' && !Array.isArray(value) && value !== null) continue
+        populateField(node as HTMLInputElement, value, error)
     }
-
 }
 
-
-export const Invalid = Symbol('Invalid')
-
-
 export function setUsingDotReference(object: { [f: string]: any }, fieldRef: string, value: any) {
-
-
-    let keys = fieldRef.split("."),
-        keyChainEnd = keys.length - 1,
-        i
-    for (i = 0; i < keyChainEnd; ++i) {
-        let key = keys[i];
-        object[key] = object[key] || {};
-        object = object[key];
+    const parts = fieldRef.split(".")
+    for (let i = 0; i < parts.length; i++) {
+        const part = parts[i]
+        if (i === parts.length - 1) object[part] = value
+        else { if (!object[part]) object[part] = {}; object = object[part] }
     }
-    object[keys[i]] = value
-
     return object
-
 }
 
 export function readUsingDotReference(object: { [f: string]: any }, fieldRef: string) {
-    if (!object || !fieldRef) return undefined;
-    return fieldRef.split(".").reduce((a, c) => {
-        if (a === undefined || a === null) return undefined;
-        return a[c];
-    }, object);
+    if (!object || !fieldRef) return undefined
+    return fieldRef.split(".").reduce((a, c) => (a && a[c] !== undefined) ? a[c] : undefined, object)
 }
 
-/**
- * disable or enable all or part of the fields
- * @param baseNode
- * @param disable
- * @param fields null means all, otherwise an array of field name is expected
- * @param subfield lets you specify specific cases in a multiple options inputs
- * @param keyFieldName
- */
-export function disable(baseNode: HTMLElement, disable = true, fields?: string[], subfield?: string, keyFieldName = DEFAULT_KEY_FIELDNAME) {
-
-    const nodes: HTMLElement[] = refs(baseNode, keyFieldName)
-    for (let n of nodes) {
+export function disable(baseNode: HTMLElement, disable: boolean, fields?: string[] | null, subfield?: string, keyFieldName = DEFAULT_KEY_FIELDNAME) {
+    const nodes = baseNode.querySelectorAll(`[${keyFieldName}]`)
+    for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i]
         if (fields) {
             const r = n.getAttribute(keyFieldName) as string
-            if (!fields.includes(r) || subfield && subfield != n.getAttribute('value'))
-                continue
+            if (!fields.includes(r) || subfield && subfield != n.getAttribute('value')) continue
         }
-        disable ?
-            n.setAttribute('disabled', '') :
-            n.removeAttribute('disabled')
+        disable ? n.setAttribute('disabled', '') : n.removeAttribute('disabled')
     }
-
 }
 
-/**
- * This class generate forms out of raw data and optional meta-data.
- * It supports automatic translation (of labels and display values).
- * It generates raw DOM elements without styling, so it is your responsibility to style it (which is very easy).
- *
- */
 export class AutoForm {
-
-    /**
-     * change this for supporting translation of labels
-     * @param s
-     */
     textTranslator = (s: string) => s
-
-    /**
-     * The generated form.
-     */
     readonly form: HTMLFormElement
-
-    /**
-     * Group definitions
-     */
     groups: GroupMetaData = {}
 
-    /**
-     * Wizard mode flag
-     */
-    wizard: boolean = false
-
-    private currentStepIndex: number = 0
-
-    /**
-     * You can provide the metadata right in the constructor or anytime before rendering
-     * @param metaData the metadata
-     * @see FormMetaData
-     */
     constructor(public metaData: FormMetaData = {}) {
-        const form = ce('form')
-        form.className = 'autoform'
-        this.form = form as HTMLFormElement
+        this.form = ce('form', 'autoform') as HTMLFormElement
     }
 
-    /**
-     * This method does the DOM element creation
-     * @param data the data by which to "guess" the form
-     * @param root optionally, you can tell it to render right into that element
-     * @return the generated form
-     */
     render(data: any, root?: HTMLElement): HTMLFormElement {
         this.renderFields(this.form, data)
-        if (this.wizard) {
-            this.goTo(0)
-        }
         root?.appendChild(this.form)
         return this.form
     }
 
-
-    private renderFields(node: HTMLElement, data: any, parents: string[] = []) {
-        const groupContainers: { [name: string]: HTMLElement } = {}
-
+    protected renderFields(container: HTMLElement, data: any, parents: string[] = []) {
         for (let [fieldName, value] of Object.entries(data)) {
             const fmd = this.getFieldMetaData(fieldName, value, parents) as any
+            if (fmd.componentType === 'object') { this.renderFields(container, value, parents.concat(fieldName)); continue }
             const newNode = this.renderField(fieldName, fmd, value, parents)
-
-            let targetNode = node
-            const groupName = fmd.group
-            if (groupName && typeof groupName === 'string') {
-                if (!groupContainers[groupName]) {
+            const groupName = fmd.group || (this instanceof Wizard ? 'default' : null)
+            let targetNode = container
+            if (groupName) {
+                let groupContainer = container.querySelector(`[data-group="${groupName}"]`) as HTMLElement
+                if (!groupContainer) {
                     const gmd = this.groups[groupName] || {}
-                    const container = ce('div', 'field-group')
-                    if (gmd.class) container.classList.add(gmd.class)
-                    if (gmd.label) {
-                        const label = ce('div', 'group-label')
-                        label.textContent = this.textTranslator(gmd.label)
-                        container.appendChild(label)
+                    groupContainer = ce('div', 'field-group')
+                    groupContainer.setAttribute('data-group', groupName)
+                    if (this instanceof Wizard) {
+                        groupContainer.classList.add('wizard-page')
+                        groupContainer.style.display = 'none'
                     }
-                    container.setAttribute('data-group', groupName)
-                    node.appendChild(container)
-                    groupContainers[groupName] = container
+                    if (gmd.label || (groupName === 'default' && !gmd.label)) {
+                        const label = ce('div', 'group-label')
+                        label.textContent = this.textTranslator(gmd.label || 'Other Details')
+                        groupContainer.appendChild(label)
+                    }
+                    if (gmd.text) {
+                        const text = ce('p', 'group-text')
+                        text.textContent = this.textTranslator(gmd.text)
+                        groupContainer.appendChild(text)
+                    }
+                    container.appendChild(groupContainer)
                 }
-                targetNode = groupContainers[groupName]
+                targetNode = groupContainer
             }
-
             targetNode.appendChild(newNode)
         }
     }
 
-    /**
-     * Navigation for Wizard mode
-     */
-    next() {
-        this.goTo(this.currentStepIndex + 1)
+    protected getFieldMetaData(fieldName: string, value: any, parents: string[]): FieldMetaData {
+        const fullPath = [...parents, fieldName].join('.')
+        const fmt = this.metaData[fullPath] || {}
+        const autoFmd: FieldMetaData = { label: this.textTranslator(fieldName), componentType: 'input' }
+        if (Array.isArray(value)) {
+            if (typeof (value[0]) === 'object') autoFmd.componentType = 'table'
+            else if (['string', 'number'].includes(typeof (value[0]))) {
+                autoFmd.componentType = 'select'; autoFmd.options = value; autoFmd.attributes = { multiple: 'multiple' }
+            }
+        } else if (typeof value === 'object' && value !== null) {
+            if (value instanceof Date) autoFmd.componentType = 'date'
+            else { autoFmd.componentType = 'object'; autoFmd.nested = value }
+        } else this.guessType(autoFmd, value)
+        return { ...autoFmd, ...fmt }
     }
 
-    prev() {
-        this.goTo(this.currentStepIndex - 1)
-    }
-
-    goTo(step: number | string) {
-        const groupNames = Object.keys(this.groups)
-        let index = typeof step === 'number' ? step : groupNames.indexOf(step)
-
-        if (index < 0 || index >= groupNames.length) return
-
-        this.currentStepIndex = index
-        const activeGroupName = groupNames[index]
-
-        this.form.querySelectorAll('.field-group').forEach((el) => {
-            const node = el as HTMLElement
-            if (node.getAttribute('data-group') === activeGroupName) {
-                node.style.display = ''
-            } else {
-                node.style.display = 'none'
-            }
-        })
-    }
-
-    private getFieldMetaData(fieldName: string, value: any, _parents: string[]): FieldMetaData {
-
-        const self = this
-        const autoFmd = createFMD()
-        const parents = _parents.concat()
-        const fmt = findFMD(this.metaData, parents)
-        const result = fmt ? {...autoFmd, ...fmt} : autoFmd
-        // @ts-ignore
-        if (fmt?.group) result.group = fmt.group
-        return result as FieldMetaData
-
-        function findFMD(meta: FormMetaData, parentsList: string[]): FieldMetaData {
-            if (!parentsList.length)
-                return meta?.[fieldName]
-            // if we're here, it means it's a nested object/form
-            const p: string = <string>parents.shift()
-            return findFMD(meta[p] as FormMetaData, parents)
-        }
-
-        function createFMD() {
-            const fmt: FieldMetaData = {
-                label: self.textTranslator(fieldName),
-                componentType: 'input',
-                tooltip: '',
-                helpText: ''
-            }
-            if (Array.isArray(value)) {
-                if (typeof (value[0]) === 'object') {
-                    fmt.componentType = 'table'
-                    return fmt
-                } else if (['string', 'number'].includes(typeof (value[0]))) {
-                    fmt.componentType = 'select'
-                    fmt.options = value
-                    fmt.attributes = {multiple: 'multiple'}
-                    return fmt
-                } else {
-                    // arrays of other types aren't handled
-                }
-            }
-            if (typeof value === 'object') {
-                if (value instanceof Date) {
-                    fmt.componentType = 'date'
-                    return fmt
-                } else {
-                    fmt.componentType = 'object'
-                    fmt.nested = value
-                    return fmt
-                }
-            }
-            // primitive type
-            self.guessType(fmt, value)
-            return fmt
-        }
-    }
-
-    private renderField(fieldName: string, fmt: FieldMetaData, value: any, parents: string[]): HTMLElement {
-
+    protected renderField(fieldName: string, fmt: FieldMetaData, value: any, parents: string[]): HTMLElement {
         let node: HTMLElement
         const setRef = (n: HTMLElement) => n.setAttribute('ref', [...parents, fieldName].join('.'))
         switch (fmt.componentType) {
-            case 'input': {
-                node = cie()
-                setRef(node)
-                break
-            }
-            case 'date': {
-                node = cie('date')
-                setRef(node)
-                break
-            }
-
-            case 'select': {
-                node = ce('select')
-                setRef(node)                // @ts-ignore
-                fmt.options.forEach((o: any) => {
-                    const option = ce('option') as HTMLOptionElement
-                    node.appendChild(option)
-                    option.innerText = this.textTranslator(o.text || o)
-                    option.setAttribute('value', o.value || o)
-                })
-                break
-            }
-            case 'checkbox': {
+            case 'select':
+                node = ce('select'); setRef(node)
+                // @ts-ignore
+                fmt.options?.forEach((o: any) => {
+                    const opt = ce('option') as HTMLOptionElement; node.appendChild(opt)
+                    opt.innerText = this.textTranslator(o.text || o); opt.setAttribute('value', o.value || o)
+                }); break
+            case 'checkbox':
                 if (fmt.options) {
                     node = ce('span')
                     // @ts-ignore
                     fmt.options.forEach((o: any) => {
-                        const option = cie('checkbox', fieldName, o.value || o)
-                        node.appendChild(option)
-                        setRef(option)
+                        const opt = cie('checkbox', fieldName, o.value || o); node.appendChild(opt); setRef(opt)
                         node.appendChild(ce('span')).innerText = this.textTranslator(o.text || o)
                     })
-                } else {
-                    node = cie('checkbox')
-                    setRef(node)
-                }
-                break
-            }
-            case 'radio': {
-                node = ce('span')
+                } else { node = cie('checkbox'); setRef(node) }; break
+            case 'radio':
+                node = ce('span', 'radio-button-set')
                 // @ts-ignore
-                node.className = 'radio-button-set'
-                if (fmt.options) {
-                    // @ts-ignore
-                    fmt.options.forEach((o: any) => {
-                        const option = cie('radio', fieldName, o.value || o)
-                        setRef(option)
-                        node.appendChild(option)
-                        const text = ce('span')
-                        node.appendChild(text)
-                        text.innerText = this.textTranslator(o.text || o)
-                    })
-                } else {
-                    node = cie('checkbox')
-                }
-                break
-            }
-            case 'textarea': {
-                node = ce('textarea')
-                setRef(node)
-                break
-            }
-            case 'object': {
-                node = ce('div')
-                // @ts-ignore
-                node.className = 'nested'
-                const header = ce('h' + parents.length + 1)
-                // @ts-ignore
-                header.innerText = this.textTranslator(fmt.label)
-                this.renderFields(node, value, parents.concat(fieldName))
-                break
-            }
-            default:
-                node = ce('input')
+                fmt.options?.forEach((o: any) => {
+                    const opt = cie('radio', fieldName, o.value || o); setRef(opt); node.appendChild(opt)
+                    const text = ce('span'); node.appendChild(text); text.innerText = this.textTranslator(o.text || o)
+                }) || (node = cie('radio', fieldName), setRef(node)); break
+            case 'textarea': node = ce('textarea'); setRef(node); break
+            case 'date': node = cie('date'); setRef(node); break
+            default: node = cie(fmt.componentType === 'number' ? 'number' : 'text'); setRef(node)
         }
         // @ts-ignore
         Object.entries(fmt.attributes || {}).forEach(([k, v]) => node.setAttribute(k, v))
@@ -538,64 +226,67 @@ export class AutoForm {
         const [block, label] = CE('div', ce('label'), node, ce('span', 'error-message'))
         // @ts-ignore
         label.textContent = fmt.label
-
         return block
     }
 
-    private guessType(fmt: FieldMetaData, value: any) {
+    private guessType(fmt: any, value: any) {
+        if (typeof value === 'boolean') fmt.componentType = 'checkbox'
+        else if (typeof value === 'number') { fmt.componentType = 'input'; fmt.attributes = { type: 'number' } }
+        else if (typeof value === 'string') fmt.componentType = (value.length > 40 || value.includes('\n')) ? 'textarea' : 'input'
+    }
+}
 
-        switch (typeof value) {
-            case 'boolean':
-                fmt.componentType = 'checkbox'
-                break
-            case 'number':
-                fmt.componentType = 'input'
-                fmt.attributes = {type: 'number'}
-                break
-            case 'string':
-                fmt.componentType = (value.length > 40 || value.includes('\n')) ? 'textarea' : 'input'
-                break
-            case 'undefined':
-            default:
-                fmt.componentType = 'input'
-                break
-        }
+export class Wizard extends AutoForm {
+    onPageChange?: (step: { newIndex: number, oldIndex: number, total: number }) => void
+    private currentStepIndex: number = 0
 
+    render(data: any, root?: HTMLElement): HTMLFormElement {
+        this.form.classList.add('wizard-mode')
+        Object.keys(this.groups).forEach((name, i) => {
+            const g = this.groups[name]
+            const p = ce('div', 'field-group wizard-page')
+            p.id = `wizard-page-${i}`; p.style.display = 'none'; p.setAttribute('data-group', name)
+            if (g.label) { const l = ce('div', 'group-label'); l.textContent = this.textTranslator(g.label); p.appendChild(l) }
+            if (g.text) { const t = ce('p', 'group-text'); t.textContent = this.textTranslator(g.text); p.appendChild(t) }
+            this.form.appendChild(p)
+        })
+        this.renderFields(this.form, data)
+        this.goTo(0)
+        root?.appendChild(this.form)
+        return this.form
+    }
+
+    next() {
+        const pages = Array.from(this.form.querySelectorAll('.wizard-page')) as HTMLElement[]
+        const cur = pages[this.currentStepIndex]
+        if (cur && Object.keys(collectValues(cur)._errors || {}).length > 0) { populateFields(cur, collectValues(cur)); return }
+        this.goTo(this.currentStepIndex + 1)
+    }
+    prev() { this.goTo(this.currentStepIndex - 1) }
+    goTo(step: number | string) {
+        const pages = Array.from(this.form.querySelectorAll('.wizard-page')) as HTMLElement[]
+        let idx = typeof step === 'number' ? step : pages.indexOf(this.form.querySelector(`[data-group="${step}"]`) as any)
+        if (idx < 0 || idx >= pages.length) return
+        pages[this.currentStepIndex].style.display = 'none'
+        pages[idx].style.display = 'block'
+        const old = this.currentStepIndex; this.currentStepIndex = idx
+        if (this.onPageChange) this.onPageChange({ newIndex: idx, oldIndex: old, total: pages.length })
     }
 }
 
 export type FormMetaData = { [fieldName: string]: FieldMetaData }
-export type GroupMetaData = { [groupName: string]: { label?: string, class?: string } }
+export type GroupMetaData = { [groupName: string]: { label?: string, class?: string, text?: string } }
 export type FieldMetaData = FormMetaData | {
-    label: string
-    validator?: (value: any) => boolean
-    tooltip?: string
-    helpText?: string
-    group?: string
+    label: string; validator?: (value: any) => boolean; tooltip?: string; helpText?: string; group?: string;
     componentType: 'table' | 'textarea' | 'checkbox' | 'date' | 'number' | 'radio' | 'input' | 'select' | 'object';
-    attributes?: { [name: string]: string }
-    defaultValue?: any
-    nested?: any[] | object
-    options?: { text: string, value: string }[] | string
-    dependency?: string // if a field must be set before this one, this is the fields name
-
+    attributes?: { [name: string]: string }; defaultValue?: any; nested?: any[] | object; options?: { text: string, value: string }[] | string; dependency?: string
 }
 
-function cie(type: string = 'text', name?: string, value?: string): HTMLInputElement {
-    const el = document.createElement('input')
-    el.setAttribute('type', type)
-    value && el.setAttribute('value', value)
-    return el
+function cie(type = 'text', name?: string, value?: string) {
+    const el = document.createElement('input'); el.setAttribute('type', type)
+    if (name) el.setAttribute('name', name); if (value) el.setAttribute('value', value); return el
 }
-
-function ce(e: string, className?: string): HTMLElement {
-    const el = document.createElement(e)
-    className && (el.className = className)
-    return el
-}
-
-function CE(type: string, ...children: HTMLElement[]): HTMLElement[] {
-    const e = ce(type)
-    children.forEach(c => e.appendChild(c))
-    return [e, ...children]
+function ce(e: string, className?: string) { const el = document.createElement(e); if (className) el.className = className; return el }
+function CE(type: string, ...children: (HTMLElement | undefined | null)[]): HTMLElement[] {
+    const e = ce(type); children.forEach(c => { if (c) e.appendChild(c) }); return [e, ...children as HTMLElement[]]
 }
