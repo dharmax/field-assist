@@ -2,241 +2,356 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Example</title>
-</head>
-<body>
-<div class="demo">
-    <section id="manual" class="form" onchange="printChangedField()">
-        <label>Display Name: (english alpha only)
-            <input ref="name" type="text" pattern="[a-zA-Z ]*">
-        </label>
-        <div>
-            <input type="radio" name="status" ref="status" value="single">Single
-            <input type="radio" name="status" ref="status" value="married">Married
-            <input type="radio" name="status" ref="status" value="divorced">Divorced
-        </div>
-        <div class="bio">
-            <label>About myself <br>
-                <textarea ref="generalBio" cols="30" rows="10"></textarea>
-            </label><br>
-        </div>
-        <div class="main-language">
-            <label>Main Language
-                <select autocomplete="on" ref="preferences.language.default">
-                    <option value="English">English</option>
-                    <option value="German">German</option>
-                    <option value="French">French</option>
-                </select>
-            </label>
-        </div>
-        <div class="custom-validator">
-            <label>Custom Validator (up to ten)
-                <input type="number" name="num" ref="upToTen" validator="(v)=> v < 10 ">
-            </label>
-        </div>
-        <div class="colors">
-            <label>Preferred colors
-                <select name="colors" multiple ref="selections.colors">
-                    <option value="blue">Blue</option>
-                    <option value="orange">Orange</option>
-                    <option value="teal">Teal</option>
-                </select>
-            </label>
-        </div>
-
-        <div class="pets">
-            <label>
-                <p>Simple (boolean) checkbox</p>
-                <input type="checkbox" ref="amIGood">
-
-            </label>
-            <label>Pets
-                <p>Multiple selection checkbox</p>
-                <span>
-            <input type="checkbox" ref="pets" value="dogs">dogs
-            <input type="checkbox" ref="pets" value="cats">cats
-            </span>
-            </label>
-            <label>Monsters
-                <p>You are not allowed to choose monsters</p>
-                <span>
-            <input type="checkbox" ref="monsters" value="shrek">shrek
-            <input type="checkbox" ref="monsters" value="godzila">Godzila
-            </span>
-            </label>
-        </div>
-        <div class="one-thing">
-            <label>Single Select
-                <select name="material" ref="material">
-                    <option value="steel">Steal</option>
-                    <option value="plastic">Plastic</option>
-                    <option value="glass">Glass</option>
-                </select>
-
-            </label>
-        </div>
-        Scent <input type="text" ref="selections.scent">
-        <div class="times">
-            <input type="date" ref="date">
-            <input type="datetime-local" ref="datetime">
-
-        </div>
-    </section>
-    <section id="automatic">
-        <h1>Auto-form</h1>
-        <!--        <button onclick="createForm()">Create Form</button>-->
-        <div class="autoform"></div>
-
-    </section>
-</div>
-<div>
-    <p>
-        <button id="sendAll" onclick="sendAll();">Send All</button>
-    </p>
-    <label class="errors">
-        Illegal values:
-        <pre id="errors"></pre>
-    </label>
-    <pre id="console"></pre>
-</div>
-</body>
-<style>
-    .demo {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-    }
-
-    section.form {
-        margin: 5em;
-        display: flex;
-        flex-direction: column;
-    }
-
-    button {
-        width: 10em;
-    }
-
-    .nested {
-        padding-left: 4em;
-
-    }
-
-    label {
-        color: #084545;
-        display: flex;
-        align-items: center;
-    }
-
-    label > * {
-        padding: 2px;
-        flex-grow: 0.5;
-    }
-
-    .errors {
-        color: red;
-    }
-
-    .autoform form > div {
-        padding: 2px;
-        display: grid;
-        grid-template-columns: 12em 20em;
-    }
-</style>
-<script type="module">
-    import {populateFields, collectValues, getFieldAndValue, disable, AutoForm} from "../lib/field-assist.js";
-
-    const values = {
-        name: 'Albert Einstein',
-        generalBio: 'I was a cool genius',
-        preferences: {language: {default: 'German'}},
-        status: 'married',
-        pets: ['cats'],
-        date: new Date('Nov 5 1968'),
-        time: '',
-        selections: {colors: ['orange', 'blue'], scent: 'great'},
-        material: 'plastic',
-        upToTen: 2
-    }
-
-
-    populateFields(document.getElementById('manual'), values)
-    disable(document.body)
-    setTimeout(() => {
-        disable(document.body, false)
-        disable(document.body, true, ['monsters'])
-    }, 2000)
-
-
-    showErrors()
-
-    const consoleDiv = document.getElementById("console");
-
-    function showErrors() {
-        // this is errors display example
-        const errorDiv = document.getElementById('errors')
-        const errors = collectValues(document.body)._errors
-        if (errors) {
-            errorDiv.parentElement.style.visibility = 'visible'
-            errorDiv.textContent = JSON.stringify(errors, undefined, 2)
-        } else {
-            errorDiv.parentElement.style.visibility = 'hidden'
+    <title>field-assist Complete Example</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --text: #1e293b;
+            --border: #e2e8f0;
+            --white: #ffffff;
+            --error: #ef4444;
+            --success: #22c55e;
         }
-    }
 
-
-    createForm()
-
-    function createForm() {
-        const form = new AutoForm()
-
-        //  test user metadata
-        form.metaData.pets = {
-            label: 'Favourite pets',
-            componentType: 'checkbox',
-            options: ['Cats', 'Dogs']
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            color: var(--text);
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: var(--bg);
+            line-height: 1.5;
         }
-        form.metaData.status = {
-            componentType: 'radio',
-            options: [{value: 'single', text: 'Single'}, 'married', 'divorced']
+
+        h1 { font-size: 1.875rem; font-weight: 700; margin-bottom: 2rem; color: var(--text); }
+        h2 { font-size: 1.25rem; margin-top: 2rem; margin-bottom: 1rem; }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+
+            & section {
+                background: var(--white);
+                padding: 1.5rem;
+                border-radius: 0.75rem;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                border: 1px solid var(--border);
+            }
         }
-        form.metaData.generalBio = {
-            componentType: 'textarea',
-        }
-        // TODO add support for tables
-        form.metaData.preferences = {
-            language: {
-                default: {
-                    label: 'Main language',
-                    componentType: 'select',
-                    options: ['German', 'English', 'French']
+
+        .form-row, .autoform .field-group > div {
+            margin-bottom: 1rem;
+            
+            & label {
+                display: block;
+                font-size: 0.875rem;
+                font-weight: 600;
+                margin-bottom: 0.25rem;
+            }
+
+            & input:not([type="checkbox"]):not([type="radio"]), & select, & textarea {
+                width: 100%;
+                padding: 0.5rem;
+                border: 1px solid var(--border);
+                border-radius: 0.375rem;
+                background: var(--white);
+                font-size: 0.875rem;
+                
+                &:focus {
+                    outline: 2px solid var(--primary);
+                    outline-offset: -1px;
+                }
+                
+                &:invalid {
+                    border-color: var(--error);
                 }
             }
         }
-        const formNode = form.render(values, document.getElementById('automatic'))
-        populateFields(formNode, values)
 
+        .field-group {
+            border: 1px dotted var(--border);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0.5rem;
 
+            & .group-label {
+                font-weight: 700;
+                color: var(--primary);
+                margin-bottom: 1rem;
+                font-size: 0.875rem;
+                text-transform: uppercase;
+                letter-spacing: 0.025em;
+            }
+        }
+
+        .results-area {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 3rem;
+
+            & pre {
+                background: #0f172a;
+                color: #e2e8f0;
+                padding: 1rem;
+                border-radius: 0.5rem;
+                font-size: 0.75rem;
+                overflow: auto;
+                max-height: 300px;
+            }
+
+            & #output-errors { color: var(--error); }
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--white);
+            transition: all 0.2s;
+
+            &:hover { background: var(--bg); }
+            
+            &.primary {
+                background: var(--primary);
+                color: var(--white);
+                border: none;
+                &:hover { background: var(--primary-hover); }
+            }
+            
+            &.wizard-nav {
+                background: var(--success);
+                color: var(--white);
+                border: none;
+                &:hover { opacity: 0.9; }
+            }
+        }
+
+        .disabled-msg { font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem; }
+
+        .error-message {
+            display: none;
+            color: var(--error);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            grid-column: 2;
+        }
+
+        input.is-invalid, select.is-invalid, textarea.is-invalid {
+            border-color: var(--error) !important;
+            background-color: #fef2f2 !important;
+        }
+    </style>
+</head>
+<body>
+
+<div id="protocol-warning" style="display:none; background: #fee2e2; color: #991b1b; padding: 1rem; text-align: center; font-weight: bold; border-bottom: 2px solid #ef4444;">
+    ⚠️ Error: ES Modules require a local server. Please run "npx http-server ." in the project root.
+</div>
+
+<h1>field-assist Library Features</h1>
+
+<div class="container">
+    <!-- 1. MANUAL FORM SECTION -->
+    <section id="manual-section">
+        <h2>1. Manual HTML Form</h2>
+        <p class="disabled-msg">Note: 'Monsters' checkbox is disabled via code.</p>
+        <div id="manual-form">
+            <div class="form-row">
+                <label>User Name (Pattern: A-Z only):</label>
+                <input ref="user.name" type="text" pattern="[a-zA-Z ]*" title="Only letters and spaces">
+            </div>
+            <div class="form-row">
+                <label>Bio (Textarea):</label>
+                <textarea ref="user.bio" rows="3"></textarea>
+            </div>
+            <div class="form-row">
+                <label>Age (Custom Validator: < 120):</label>
+                <input ref="user.age" type="number" validator="(v) => v > 0 && v < 120">
+            </div>
+            <div class="form-row">
+                <label>Status (Radios):</label>
+                <input type="radio" name="status" ref="status" value="single"> Single
+                <input type="radio" name="status" ref="status" value="married"> Married
+            </div>
+            <div class="form-row">
+                <label>Interests (Multi-select):</label>
+                <select ref="interests" multiple>
+                    <option value="coding">Coding</option>
+                    <option value="music">Music</option>
+                    <option value="art">Art</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>Monsters (Disabled):</label>
+                <input type="checkbox" ref="monsters" value="vampire"> Vampire
+                <input type="checkbox" ref="monsters" value="zombie"> Zombie
+            </div>
+        </div>
+        <div class="actions">
+            <button onclick="doPopulateManual()">Populate Manual Form</button>
+        </div>
+    </section>
+
+    <!-- 2. AUTO-FORM WITH GROUPS -->
+    <section id="auto-section">
+        <h2>2. AutoForm (Grouped)</h2>
+        <div id="auto-form-container"></div>
+    </section>
+
+    <!-- 3. WIZARD FORM SECTION -->
+    <section id="wizard-section" style="grid-column: 1 / -1;">
+        <h2>3. Wizard Form (Multi-step)</h2>
+        <div id="wizard-form-container"></div>
+        <div class="actions">
+            <button class="wizard-nav" onclick="window.wizard.prev()">Previous</button>
+            <button class="wizard-nav" onclick="window.wizard.next()">Next</button>
+            <button class="secondary" onclick="window.wizard.goTo('finish')">Jump to Finish</button>
+        </div>
+    </section>
+</div>
+
+<div class="results-area">
+    <div>
+        <h3>Live Data (collectValues)</h3>
+        <pre id="output-data">{}</pre>
+    </div>
+    <div>
+        <h3>Validation Errors (_errors)</h3>
+        <pre id="output-errors" class="error-text">None</pre>
+    </div>
+</div>
+
+<script type="module">
+    if (window.location.protocol === 'file:') {
+        document.getElementById('protocol-warning').style.display = 'block';
+    }
+    import { populateFields, collectValues, disable, AutoForm, getFieldAndValue } from "../lib/field-assist.js";
+
+    // --- INITIAL DATA ---
+    const initialData = {
+        user: {
+            name: 'John Doe',
+            bio: 'Software engineer from Earth.',
+            age: 30
+        },
+        status: 'single',
+        interests: ['coding', 'music'],
+        preferences: {
+            theme: 'dark',
+            notifications: true
+        },
+        account: {
+            email: 'john@example.com',
+            newsletter: true
+        }
+    };
+
+    // --- 1. MANUAL FORM LOGIC ---
+    window.doPopulateManual = () => {
+        populateFields(document.getElementById('manual-form'), initialData);
+        updateOutput();
+    };
+
+    // Disable monsters checkboxes
+    disable(document.getElementById('manual-form'), true, ['monsters']);
+
+    // --- 2. AUTO-FORM (GROUPED) LOGIC ---
+    const autoMeta = {
+        'user.name': { label: 'Full Name', group: 'personal' },
+        'user.age': { label: 'Age', group: 'personal', attributes: { type: 'number' } },
+        'account.email': { label: 'Email Address', group: 'account' },
+        'account.newsletter': { label: 'Subscribe?', group: 'account', componentType: 'checkbox' }
+    };
+    
+    const autoGroups = {
+        personal: { label: 'User Identity', class: 'custom-group-style' },
+        account: { label: 'Security & Updates' }
+    };
+
+    const autoForm = new AutoForm(autoMeta);
+    autoForm.groups = autoGroups;
+    autoForm.render(initialData, document.getElementById('auto-form-container'));
+    populateFields(document.getElementById('auto-form-container'), initialData);
+
+    // --- 3. WIZARD FORM LOGIC ---
+    const wizardMeta = {
+        'user.name': { label: 'What is your name?', group: 'start' },
+        'preferences.theme': { 
+            label: 'Choose Theme', 
+            group: 'settings', 
+            componentType: 'select', 
+            options: ['light', 'dark', 'system'] 
+        },
+        'preferences.notifications': { 
+            label: 'Enable Alerts', 
+            group: 'settings', 
+            componentType: 'checkbox' 
+        },
+        'status': { label: 'Final Status', group: 'finish', componentType: 'radio', options: ['single', 'married'] }
+    };
+
+    const wizardGroups = {
+        start: { label: 'Step 1: Introduction' },
+        settings: { label: 'Step 2: Preferences' },
+        finish: { label: 'Step 3: Confirmation' }
+    };
+
+    const wizard = new AutoForm(wizardMeta);
+    wizard.groups = wizardGroups;
+    wizard.wizard = true;
+    wizard.render(initialData, document.getElementById('wizard-form-container'));
+    populateFields(document.getElementById('wizard-form-container'), initialData);
+    
+    window.wizard = wizard; // Make available to global buttons
+
+    // --- GLOBAL RESULTS UPDATE ---
+    function updateOutput() {
+        // Collect from everything
+        const allData = collectValues(document.body);
+        
+        // Push errors back to visual state
+        populateFields(document.getElementById('manual-form'), allData);
+        populateFields(document.getElementById('auto-form-container'), allData);
+        populateFields(document.getElementById('wizard-form-container'), allData);
+        
+        document.getElementById('output-data').textContent = JSON.stringify(allData, (key, value) => {
+            if (typeof value === 'symbol') return 'Symbol(Invalid)';
+            return value;
+        }, 2);
+
+        const errors = allData._errors;
+        if (errors) {
+            document.getElementById('output-errors').textContent = JSON.stringify(errors, (key, value) => {
+                if (value instanceof HTMLElement) return `<${value.tagName.toLowerCase()} ref="${value.getAttribute('ref')}">`;
+                return value;
+            }, 2);
+        } else {
+            document.getElementById('output-errors').textContent = 'None';
+        }
     }
 
-    window.sendAll = () => {
-
-        const fields1 = collectValues(document.getElementById('manual'))
-        console.log('Manual form results')
-        console.dir(fields1)
-
-        const fields2 = collectValues(document.getElementById('automatic'))
-        console.log('Automatic form results')
-        console.dir(fields2)
-
-        consoleDiv.textContent = JSON.stringify(fields1) + '\n' + JSON.stringify(fields2)
-
-    }
-    window.printChangedField = function () {
-        console.log(getFieldAndValue(window.event))
-    }
-
+    // Update on any change
+    document.body.addEventListener('input', updateOutput);
+    document.body.addEventListener('change', updateOutput);
+    
+    // Initial update
+    updateOutput();
 
 </script>
-
-
+</body>
 </html>

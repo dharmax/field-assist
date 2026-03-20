@@ -137,8 +137,24 @@ export function getFieldAndValue(event: Event | HTMLElement, context?: any, keyF
  * Populate a single field in a normalized way
  * @param node the field's node
  * @param value the value
+ * @param error optional error object
  */
-export function populateField(node: HTMLInputElement, value: string | number | boolean | string[]) {
+export function populateField(node: HTMLInputElement, value: any, error?: any) {
+
+    const errorMsgNode = node.parentElement?.querySelector('.error-message') as HTMLElement
+
+    if (error) {
+        node.classList.add('is-invalid')
+        if (errorMsgNode) {
+            errorMsgNode.textContent = 'Invalid value' // Default or custom?
+            errorMsgNode.style.display = 'block'
+        }
+    } else {
+        node.classList.remove('is-invalid')
+        if (errorMsgNode) {
+            errorMsgNode.style.display = 'none'
+        }
+    }
 
     switch (node.type) {
         case 'checkbox': {
@@ -189,16 +205,23 @@ export function populateField(node: HTMLInputElement, value: string | number | b
  * @param baseNode the base of the form (doesn't have to be a Form element)
  * @param values the values
  */
-export function populateFields(baseNode: HTMLElement, values: { [ref: string]: string | string[] | boolean | number }) {
+export function populateFields(baseNode: HTMLElement, values: { [ref: string]: any }) {
     const fieldMap = refNodes(baseNode)
+    const errors = values?._errors || {}
+
     for (let [ref, node] of Object.entries(fieldMap)) {
-        let value = readUsingDotReference(values, ref);
+        let value: any = readUsingDotReference(values, ref);
+        const error = readUsingDotReference(errors, ref);
+
         if (value instanceof Date)
             value = value.toISOString()
-        if (typeof value === 'object' && !Array.isArray(value))
-            console.error(`Field ${ref} is an object and therefore unassignable to a single input.`)
-        else
-            populateField(node, value)
+        
+        if (value !== undefined && typeof value === 'object' && !Array.isArray(value) && value !== null) {
+            // This happens if the ref points to an object rather than a leaf value
+            continue;
+        }
+        
+        populateField(node, value, error)
     }
 
 }
@@ -225,9 +248,11 @@ export function setUsingDotReference(object: { [f: string]: any }, fieldRef: str
 }
 
 export function readUsingDotReference(object: { [f: string]: any }, fieldRef: string) {
-    let result: any = {...object}
-    result = fieldRef.split(".").reduce((a, c) => a[c], result)
-    return result
+    if (!object || !fieldRef) return undefined;
+    return fieldRef.split(".").reduce((a, c) => {
+        if (a === undefined || a === null) return undefined;
+        return a[c];
+    }, object);
 }
 
 /**
@@ -274,6 +299,18 @@ export class AutoForm {
     readonly form: HTMLFormElement
 
     /**
+     * Group definitions
+     */
+    groups: GroupMetaData = {}
+
+    /**
+     * Wizard mode flag
+     */
+    wizard: boolean = false
+
+    private currentStepIndex: number = 0
+
+    /**
      * You can provide the metadata right in the constructor or anytime before rendering
      * @param metaData the metadata
      * @see FormMetaData
@@ -292,18 +329,72 @@ export class AutoForm {
      */
     render(data: any, root?: HTMLElement): HTMLFormElement {
         this.renderFields(this.form, data)
+        if (this.wizard) {
+            this.goTo(0)
+        }
         root?.appendChild(this.form)
         return this.form
     }
 
 
     private renderFields(node: HTMLElement, data: any, parents: string[] = []) {
-        console.log(parents)
+        const groupContainers: { [name: string]: HTMLElement } = {}
+
         for (let [fieldName, value] of Object.entries(data)) {
-            const fmd = this.getFieldMetaData(fieldName, value, parents)
+            const fmd = this.getFieldMetaData(fieldName, value, parents) as any
             const newNode = this.renderField(fieldName, fmd, value, parents)
-            node.appendChild(newNode)
+
+            let targetNode = node
+            const groupName = fmd.group
+            if (groupName && typeof groupName === 'string') {
+                if (!groupContainers[groupName]) {
+                    const gmd = this.groups[groupName] || {}
+                    const container = ce('div', 'field-group')
+                    if (gmd.class) container.classList.add(gmd.class)
+                    if (gmd.label) {
+                        const label = ce('div', 'group-label')
+                        label.textContent = this.textTranslator(gmd.label)
+                        container.appendChild(label)
+                    }
+                    container.setAttribute('data-group', groupName)
+                    node.appendChild(container)
+                    groupContainers[groupName] = container
+                }
+                targetNode = groupContainers[groupName]
+            }
+
+            targetNode.appendChild(newNode)
         }
+    }
+
+    /**
+     * Navigation for Wizard mode
+     */
+    next() {
+        this.goTo(this.currentStepIndex + 1)
+    }
+
+    prev() {
+        this.goTo(this.currentStepIndex - 1)
+    }
+
+    goTo(step: number | string) {
+        const groupNames = Object.keys(this.groups)
+        let index = typeof step === 'number' ? step : groupNames.indexOf(step)
+
+        if (index < 0 || index >= groupNames.length) return
+
+        this.currentStepIndex = index
+        const activeGroupName = groupNames[index]
+
+        this.form.querySelectorAll('.field-group').forEach((el) => {
+            const node = el as HTMLElement
+            if (node.getAttribute('data-group') === activeGroupName) {
+                node.style.display = ''
+            } else {
+                node.style.display = 'none'
+            }
+        })
     }
 
     private getFieldMetaData(fieldName: string, value: any, _parents: string[]): FieldMetaData {
@@ -312,7 +403,10 @@ export class AutoForm {
         const autoFmd = createFMD()
         const parents = _parents.concat()
         const fmt = findFMD(this.metaData, parents)
-        return fmt ? {...autoFmd, ...fmt} : autoFmd
+        const result = fmt ? {...autoFmd, ...fmt} : autoFmd
+        // @ts-ignore
+        if (fmt?.group) result.group = fmt.group
+        return result as FieldMetaData
 
         function findFMD(meta: FormMetaData, parentsList: string[]): FieldMetaData {
             if (!parentsList.length)
@@ -396,7 +490,7 @@ export class AutoForm {
                         node.appendChild(ce('span')).innerText = this.textTranslator(o.text || o)
                     })
                 } else {
-                    const node = cie('checkbox')
+                    node = cie('checkbox')
                     setRef(node)
                 }
                 break
@@ -441,7 +535,7 @@ export class AutoForm {
         // @ts-ignore
         Object.entries(fmt.attributes || {}).forEach(([k, v]) => node.setAttribute(k, v))
         // @ts-ignore
-        const [block, label] = CE('div', ce('label'), node)
+        const [block, label] = CE('div', ce('label'), node, ce('span', 'error-message'))
         // @ts-ignore
         label.textContent = fmt.label
 
@@ -471,11 +565,13 @@ export class AutoForm {
 }
 
 export type FormMetaData = { [fieldName: string]: FieldMetaData }
+export type GroupMetaData = { [groupName: string]: { label?: string, class?: string } }
 export type FieldMetaData = FormMetaData | {
     label: string
     validator?: (value: any) => boolean
     tooltip?: string
     helpText?: string
+    group?: string
     componentType: 'table' | 'textarea' | 'checkbox' | 'date' | 'number' | 'radio' | 'input' | 'select' | 'object';
     attributes?: { [name: string]: string }
     defaultValue?: any

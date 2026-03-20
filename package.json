@@ -6,7 +6,7 @@
   "module": "lib/field-assist.js",
   "types": "lib/field-assist.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest",
     "build": "npx tsc",
     "prepare": "npm run build"
   },
@@ -29,6 +29,8 @@
   },
   "homepage": "https://github.com/dharmax/field-assist",
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "jsdom": "^29.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^4.1.0"
   }
 }

@@ -1,98 +1,88 @@
-## Functions
+# Field-Assist API Reference
+
+## Core Functions
 
 <dl>
-<dt><a href="#collectValues">collectValues(node, context, keyFieldName)</a> ⇒</dt>
-<dd><p>Looks for elements with the &quot;ref&quot; (or whatever other  attribute then returns a map with the values
-inside those elements, with the string in the &quot;ref&quot; as the name.
-It also mark invalid values with Invalid symbol.</p>
-</dd>
-<dt><a href="#refs">refs(node, keyFieldName)</a> ⇒</dt>
-<dd></dd>
-<dt><a href="#refNodes">refNodes(node, keyFieldName)</a> ⇒</dt>
-<dd></dd>
-<dt><a href="#getFieldAndValue">getFieldAndValue(event, context, keyFieldName)</a></dt>
-<dd><p>Utility method that let you get the field name and value of the input field that is associated with an event</p>
-</dd>
-<dt><a href="#populateField">populateField(node, value)</a></dt>
-<dd><p>Populate a single field in a normalized way</p>
-</dd>
+<dt><a href="#collectValues">collectValues(node, context, keyFieldName)</a> ⇒ <code>Object</code></dt>
+<dd><p>Recursively gathers values from elements with a reference attribute (default "ref"). Supports dot-notation for nested objects.</p></dd>
+
 <dt><a href="#populateFields">populateFields(baseNode, values)</a></dt>
-<dd><p>Populate a whole form from a map of field names and values</p>
-</dd>
+<dd><p>Populates form fields from a map of values. Also handles visual error states if <code>values._errors</code> is present.</p></dd>
+
+<dt><a href="#populateField">populateField(node, value, error)</a></dt>
+<dd><p>Populates a single field and toggles the <code>.is-invalid</code> class and <code>.error-message</code> visibility.</p></dd>
+
+<dt><a href="#getFieldAndValue">getFieldAndValue(event, context, keyFieldName)</a> ⇒ <code>Object</code></dt>
+<dd><p>Utility to get the name and normalized value of a field associated with a DOM event.</p></dd>
+
+<dt><a href="#disable">disable(baseNode, disable, fields, subfield, keyFieldName)</a></dt>
+<dd><p>Enables or disables fields within a container.</p></dd>
 </dl>
 
+---
+
+## AutoForm Class
+
+The `AutoForm` class generates HTML forms dynamically from data and metadata.
+
+### Properties
+- **`metaData`**: `FormMetaData` - Configuration for field labels, types, and validation.
+- **`groups`**: `GroupMetaData` - Defines logical sections/fieldsets.
+- **`wizard`**: `boolean` - If true, enables multi-step "Wizard" mode.
+- **`textTranslator`**: `Function` - A hook for translating labels (default returns the string as-is).
+
+### Methods
+- **`render(data, root?)`**: Generates the form elements.
+- **`next()`**: (Wizard mode) Navigates to the next group.
+- **`prev()`**: (Wizard mode) Navigates to the previous group.
+- **`goTo(step)`**: (Wizard mode) Navigates to a specific step index or group name.
+
+---
+
+## Types
+
+### `FieldMetaData`
+```typescript
+{
+    label: string;
+    componentType: 'input' | 'textarea' | 'checkbox' | 'radio' | 'select' | 'date' | 'number' | 'table' | 'object';
+    group?: string;        // Logical group name
+    validator?: Function;  // Custom validation logic
+    attributes?: Object;   // Raw HTML attributes
+    options?: Array;       // Options for select/radio/checkbox-groups
+    nested?: Object;       // Nested metadata for 'object' type
+}
+```
+
+### `GroupMetaData`
+```typescript
+{
+    [groupName: string]: {
+        label?: string;    // Display title for the group
+        class?: string;    // Custom CSS class for the group container
+    }
+}
+```
+
+---
+
 <a name="collectValues"></a>
-
-## collectValues(node, context, keyFieldName) ⇒
-Looks for elements with the "ref" (or whatever other  attribute then returns a map with the values
-inside those elements, with the string in the "ref" as the name.
-It also mark invalid values with Invalid symbol.
-
-**Kind**: global function  
-**Returns**: the fields and _errors field with the list of erroneous values  
+## collectValues(node, context, keyFieldName)
+**Returns**: An object where keys are the `ref` names and values are normalized. If validation fails, the entry value is the `Invalid` Symbol, and details are in `_errors`.
 
 | Param | Description |
 | --- | --- |
-| node | start node to look within |
-| context | an optional context object that will be injected into a custom validator |
-| keyFieldName | optional alternative reference field name |
-
-<a name="refs"></a>
-
-## refs(node, keyFieldName) ⇒
-**Kind**: global function  
-**Returns**: array of elements that have the "ref" attribute  
-
-| Param | Description |
-| --- | --- |
-| node | start search node |
-| keyFieldName | optional alternative reference field name |
-
-<a name="refNodes"></a>
-
-## refNodes(node, keyFieldName) ⇒
-**Kind**: global function  
-**Returns**: elements map by the ref name  
-
-| Param | Description |
-| --- | --- |
-| node |  |
-| keyFieldName | optional alternative reference field name |
-
-<a name="getFieldAndValue"></a>
-
-## getFieldAndValue(event, context, keyFieldName)
-Utility method that let you get the field name and value of the input field that is associated with an event
-
-**Kind**: global function  
-
-| Param | Description |
-| --- | --- |
-| event | the event |
-| context | optional context for the collectValue inner call |
-| keyFieldName | optional alternative to the "ref" attribute name |
-
-<a name="populateField"></a>
-
-## populateField(node, value)
-Populate a single field in a normalized way
-
-**Kind**: global function  
-
-| Param | Description |
-| --- | --- |
-| node | the field's node |
-| value | the value |
+| node | The container element to search within. |
+| context | Optional object passed to custom validators. |
+| keyFieldName | The attribute to use as a key (default is "ref"). |
 
 <a name="populateFields"></a>
-
 ## populateFields(baseNode, values)
-Populate a whole form from a map of field names and values
-
-**Kind**: global function  
-
 | Param | Description |
 | --- | --- |
-| baseNode | the base of the form (doesn't have to be a Form element) |
-| values | the values |
+| baseNode | The container element. |
+| values | Data object (optionally containing `_errors`). |
 
+<a name="getFieldAndValue"></a>
+## getFieldAndValue(event, context, keyFieldName)
+**Returns**: `{ field: string, value: any }`
