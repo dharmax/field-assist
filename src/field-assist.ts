@@ -1,18 +1,19 @@
 const DEFAULT_KEY_FIELDNAME = 'ref'
 
-function normalizeValue(e: HTMLInputElement, context: any) {
+function normalizeValue(e: HTMLInputElement, context: any, root: HTMLElement) {
     let value
+    const ref = e.getAttribute(DEFAULT_KEY_FIELDNAME)
     switch (e.type) {
         case 'select-multiple': value = getMultiSelect(e); break
         case 'checkbox': {
-            const siblings = e.parentElement?.parentElement?.querySelectorAll(`[ref="${e.getAttribute(DEFAULT_KEY_FIELDNAME)}"]`) || []
+            const siblings = Array.from(root.querySelectorAll(`[${DEFAULT_KEY_FIELDNAME}="${ref}"]`))
             if (siblings.length === 1) { value = e.checked; break }
-            value = Array.from(siblings).filter((s: any) => s.checked).map((s: any) => s.value)
+            value = siblings.filter((s: any) => s.checked).map((s: any) => s.value)
             break
         }
         case 'radio': {
-            const siblings = e.parentElement?.parentElement?.querySelectorAll(`[ref="${e.getAttribute(DEFAULT_KEY_FIELDNAME)}"]`) || []
-            value = (Array.from(siblings).find((s: any) => s.checked) as HTMLInputElement)?.value
+            const siblings = Array.from(root.querySelectorAll(`[${DEFAULT_KEY_FIELDNAME}="${ref}"]`))
+            value = (siblings.find((s: any) => s.checked) as HTMLInputElement)?.value
             break
         }
         default: value = e.value
@@ -24,7 +25,7 @@ function normalizeValue(e: HTMLInputElement, context: any) {
             try {
                 const f = eval(customValidator.toString())
                 if (!f(value, context)) return Invalid
-            } catch (err) { console.error(`Field ${e.getAttribute(DEFAULT_KEY_FIELDNAME)} invalid validator`, err) }
+            } catch (err) { console.error(`Field ${ref} invalid validator`, err) }
         }
     }
     return e.checkValidity() ? value : Invalid
@@ -34,50 +35,54 @@ const Invalid = Symbol('Invalid')
 function getMultiSelect(e: any) { return Array.from(e.options).filter((option: any) => option.selected).map((option: any) => option.value) }
 
 export function collectValues(node: HTMLElement, context?: any, keyFieldName = DEFAULT_KEY_FIELDNAME): { [ref: string]: any } {
-    const nodes = refNodes(node, keyFieldName)
-    const result: any = { _errors: {} }
-    for (let [ref, n] of Object.entries(nodes)) {
-        const value = normalizeValue(n as HTMLInputElement, context)
-        if (value === Invalid) result._errors[ref] = { node: n, value: (n as HTMLInputElement).value }
-        setUsingDotReference(result, ref, value)
-    }
-    if (Object.keys(result._errors).length === 0) delete result._errors
-    return result
-}
-
-function refNodes(node: HTMLElement, keyFieldName = DEFAULT_KEY_FIELDNAME): { [ref: string]: HTMLElement } {
     const nodes = Array.from(node.querySelectorAll(`[${keyFieldName}]`))
-    const result: any = {}
-    nodes.forEach((n: any) => { result[n.getAttribute(keyFieldName)] = n })
+    const result: any = { _errors: {} }
+    const seen = new Set()
+
+    nodes.forEach((n: any) => {
+        const ref = n.getAttribute(keyFieldName)
+        if (seen.has(ref)) return
+        const value = normalizeValue(n, context, node)
+        if (value === Invalid) result._errors[ref] = { node: n, value: n.value }
+        setUsingDotReference(result, ref, value)
+        seen.add(ref)
+    })
+
+    if (Object.keys(result._errors).length === 0) delete result._errors
     return result
 }
 
 export function getFieldAndValue(event: Event | HTMLElement, context?: any, keyFieldName = DEFAULT_KEY_FIELDNAME): { field: string, value: any } {
     const node = event instanceof HTMLElement ? event : event.target as HTMLInputElement
-    const field = node.getAttribute(keyFieldName) as string
-    return { field, value: normalizeValue(node as HTMLInputElement, context) }
+    const root = (node as HTMLElement).closest('.autoform, form, section, body') as HTMLElement || document.body
+    const field = (node as HTMLElement).getAttribute(keyFieldName) as string
+    return { field, value: normalizeValue(node as HTMLInputElement, context, root) }
 }
 
 export function populateField(node: HTMLInputElement, value: any, error?: any) {
-    const errorMsgNode = node.parentElement?.querySelector('.error-message') as HTMLElement
+    const errorMsgNode = node.parentElement?.querySelector('.error-message') || 
+                         node.parentElement?.parentElement?.querySelector('.error-message')
+    
     if (error) {
         node.classList.add('is-invalid')
-        if (errorMsgNode) { errorMsgNode.textContent = 'Invalid value'; errorMsgNode.style.display = 'block' }
+        if (errorMsgNode) { (errorMsgNode as HTMLElement).textContent = 'Invalid value'; (errorMsgNode as HTMLElement).style.display = 'block' }
     } else {
         node.classList.remove('is-invalid')
-        if (errorMsgNode) errorMsgNode.style.display = 'none'
+        if (errorMsgNode) (errorMsgNode as HTMLElement).style.display = 'none'
     }
+
     switch (node.type) {
         case 'checkbox': {
-            const siblings = node.parentElement?.parentElement?.querySelectorAll(`[ref="${node.getAttribute(DEFAULT_KEY_FIELDNAME)}"]`) || []
-            if (siblings.length === 1) { node.checked = !!value; break }
-            node.checked = (value as string[] || []).includes(node.value)
+            if (Array.isArray(value)) node.checked = value.includes(node.value)
+            else node.checked = !!value
             break
         }
         case 'radio': { node.checked = node.value == value; break }
         case 'select-multiple': {
             const values = value as string[] || []
-            Array.from((node as any).options).forEach((option: any) => { option.selected = values.includes(option.value) })
+            Array.from((node as any).options).forEach((option: any) => {
+                option.selected = values.includes(option.value)
+            })
             break
         }
         default: node.value = value || ''
@@ -85,15 +90,16 @@ export function populateField(node: HTMLInputElement, value: any, error?: any) {
 }
 
 export function populateFields(baseNode: HTMLElement, values: { [ref: string]: any }) {
-    const fieldMap = refNodes(baseNode)
+    const nodes = Array.from(baseNode.querySelectorAll(`[${DEFAULT_KEY_FIELDNAME}]`))
     const errors = values?._errors || {}
-    for (let [ref, node] of Object.entries(fieldMap)) {
+    nodes.forEach((node: any) => {
+        const ref = node.getAttribute(DEFAULT_KEY_FIELDNAME)
         let value: any = readUsingDotReference(values, ref)
         const error = readUsingDotReference(errors, ref)
-        if (value instanceof Date) value = value.toISOString()
-        if (value !== undefined && typeof value === 'object' && !Array.isArray(value) && value !== null) continue
-        populateField(node as HTMLInputElement, value, error)
-    }
+        if (value instanceof Date) value = value.toISOString().split('T')[0]
+        if (value !== undefined && typeof value === 'object' && !Array.isArray(value) && value !== null) return
+        populateField(node, value, error)
+    })
 }
 
 export function setUsingDotReference(object: { [f: string]: any }, fieldRef: string, value: any) {
@@ -151,10 +157,7 @@ export class AutoForm {
                     const gmd = this.groups[groupName] || {}
                     groupContainer = ce('div', 'field-group')
                     groupContainer.setAttribute('data-group', groupName)
-                    if (this instanceof Wizard) {
-                        groupContainer.classList.add('wizard-page')
-                        groupContainer.style.display = 'none'
-                    }
+                    if (this instanceof Wizard) groupContainer.style.display = 'none'
                     if (gmd.label || (groupName === 'default' && !gmd.label)) {
                         const label = ce('div', 'group-label')
                         label.textContent = this.textTranslator(gmd.label || 'Other Details')
@@ -202,7 +205,7 @@ export class AutoForm {
                 }); break
             case 'checkbox':
                 if (fmt.options) {
-                    node = ce('span')
+                    node = ce('span', 'checkbox-group')
                     // @ts-ignore
                     fmt.options.forEach((o: any) => {
                         const opt = cie('checkbox', fieldName, o.value || o); node.appendChild(opt); setRef(opt)
@@ -211,11 +214,18 @@ export class AutoForm {
                 } else { node = cie('checkbox'); setRef(node) }; break
             case 'radio':
                 node = ce('span', 'radio-button-set')
-                // @ts-ignore
-                fmt.options?.forEach((o: any) => {
-                    const opt = cie('radio', fieldName, o.value || o); setRef(opt); node.appendChild(opt)
-                    const text = ce('span'); node.appendChild(text); text.innerText = this.textTranslator(o.text || o)
-                }) || (node = cie('radio', fieldName), setRef(node)); break
+                if (fmt.options) {
+                    // @ts-ignore
+                    fmt.options.forEach((o: any) => {
+                        const opt = cie('radio', fieldName, o.value || o); setRef(opt);
+                        const lbl = ce('label');
+                        lbl.appendChild(opt);
+                        lbl.appendChild(ce('span')).innerText = this.textTranslator(o.text || o);
+                        node.appendChild(lbl);
+                    })
+                } else {
+                    node = cie('radio', fieldName); setRef(node)
+                }; break
             case 'textarea': node = ce('textarea'); setRef(node); break
             case 'date': node = cie('date'); setRef(node); break
             default: node = cie(fmt.componentType === 'number' ? 'number' : 'text'); setRef(node)
@@ -238,6 +248,7 @@ export class AutoForm {
 
 export class Wizard extends AutoForm {
     onPageChange?: (step: { newIndex: number, oldIndex: number, total: number }) => void
+    onDone?: (data: any) => void
     private currentStepIndex: number = 0
 
     render(data: any, root?: HTMLElement): HTMLFormElement {
@@ -257,17 +268,23 @@ export class Wizard extends AutoForm {
     }
 
     next() {
-        const pages = Array.from(this.form.querySelectorAll('.wizard-page')) as HTMLElement[]
+        const pages = Array.from(this.form.querySelectorAll('.field-group')) as HTMLElement[]
         const cur = pages[this.currentStepIndex]
         if (cur && Object.keys(collectValues(cur)._errors || {}).length > 0) { populateFields(cur, collectValues(cur)); return }
+        
+        if (this.currentStepIndex === pages.length - 1) {
+            if (this.onDone) this.onDone(collectValues(this.form));
+            return;
+        }
+
         this.goTo(this.currentStepIndex + 1)
     }
     prev() { this.goTo(this.currentStepIndex - 1) }
     goTo(step: number | string) {
-        const pages = Array.from(this.form.querySelectorAll('.wizard-page')) as HTMLElement[]
+        const pages = Array.from(this.form.querySelectorAll('.field-group')) as HTMLElement[]
         let idx = typeof step === 'number' ? step : pages.indexOf(this.form.querySelector(`[data-group="${step}"]`) as any)
         if (idx < 0 || idx >= pages.length) return
-        pages[this.currentStepIndex].style.display = 'none'
+        if (pages[this.currentStepIndex]) pages[this.currentStepIndex].style.display = 'none'
         pages[idx].style.display = 'block'
         const old = this.currentStepIndex; this.currentStepIndex = idx
         if (this.onPageChange) this.onPageChange({ newIndex: idx, oldIndex: old, total: pages.length })

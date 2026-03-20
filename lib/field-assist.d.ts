@@ -38,6 +38,7 @@ export declare class Wizard extends AutoForm {
         oldIndex: number;
         total: number;
     }) => void;
+    onDone?: (data: any) => void;
     private currentStepIndex;
     render(data: any, root?: HTMLElement): HTMLFormElement;
     next(): void;

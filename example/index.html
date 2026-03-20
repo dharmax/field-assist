@@ -10,13 +10,13 @@
             --txt: #1e293b;
             --brd: #e2e8f0;
             --err: #ef4444;
-            --lbl: #1e3a8a; /* Dark blue for labels */
+            --lbl: #1e3a8a;
         }
 
         body {
             font: 14px/1.5 system-ui, sans-serif;
             color: var(--txt);
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 1rem;
             background: var(--bg);
@@ -39,7 +39,7 @@
         }
 
         .autoform, #manual-form {
-            /* Field-Label Blocks */
+            /* Field Blocks */
             & .field-group > div, & > div:not(.field-group), & .form-row {
                 margin-bottom: 0.75rem;
                 padding: 0.75rem;
@@ -81,6 +81,27 @@
                     color: #64748b;
                     margin-bottom: 1rem;
                     font-style: italic;
+                }
+            }
+
+            /* Inner Groups (Radio/Checkbox) */
+            & .radio-button-set, & .checkbox-group {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                
+                & label {
+                    display: flex !important;
+                    align-items: center;
+                    gap: 0.5rem;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    border: none !important;
+                    cursor: pointer;
+                    font-weight: 500 !important;
+                    color: var(--txt) !important;
+
+                    & input { width: auto !important; margin: 0; }
                 }
             }
         }
@@ -154,20 +175,28 @@
 <h1>field-assist Library Features</h1>
 
 <div class="container">
+    <!-- 1. MANUAL FORM -->
     <section id="manual-section">
         <h2>1. Manual HTML Form</h2>
         <div id="manual-form">
             <div class="form-row">
-                <label>User Name (Pattern: A-Z only):</label>
+                <label>User Name:</label>
                 <input ref="user.name" type="text" pattern="[a-zA-Z ]*">
             </div>
             <div class="form-row">
-                <label>Age (Custom Validator: < 120):</label>
+                <label>Birth Date:</label>
+                <input ref="user.dob" type="date">
+            </div>
+            <div class="form-row">
+                <label>Age (Validator: < 120):</label>
                 <input ref="user.age" type="number" validator="(v) => v > 0 && v < 120">
             </div>
             <div class="form-row">
-                <label>Bio (Textarea):</label>
-                <textarea ref="user.bio" rows="2"></textarea>
+                <label>Interests:</label>
+                <select ref="interests" multiple>
+                    <option value="coding">Coding</option>
+                    <option value="music">Music</option>
+                </select>
             </div>
         </div>
         <div class="actions">
@@ -175,11 +204,13 @@
         </div>
     </section>
 
+    <!-- 2. AUTO-FORM (GROUPED) -->
     <section id="auto-section">
         <h2>2. AutoForm (Grouped)</h2>
         <div id="auto-form-container"></div>
     </section>
 
+    <!-- 3. WIZARD FORM -->
     <section id="wizard-section" style="grid-column: 1 / -1;">
         <h2>3. Wizard Form (Multi-step)</h2>
         <div id="wizard-form-container"></div>
@@ -210,10 +241,11 @@
     }
 
     const initialData = {
-        user: { name: 'John Doe', age: 30, bio: 'Software engineer.' },
+        user: { name: 'John Doe', dob: '1990-01-01', age: 30, bio: 'Software engineer.' },
         account: { email: 'john@example.com', newsletter: true },
         preferences: { theme: 'dark' },
-        status: 'single'
+        status: 'single',
+        interests: ['coding']
     };
 
     window.doPopulateManual = () => {
@@ -221,44 +253,45 @@
         updateOutput();
     };
 
-    // --- 2. AUTO-FORM (GROUPED) ---
+    // --- 2. AUTO-FORM ---
     const autoMeta = {
         'user.name': { label: 'Full Name', group: 'personal' },
-        'user.age': { label: 'Age', group: 'personal', attributes: { type: 'number' } },
+        'user.dob': { label: 'Date of Birth', group: 'personal' },
         'account.email': { label: 'Email Address', group: 'account' },
         'account.newsletter': { label: 'Subscribe?', group: 'account', componentType: 'checkbox' }
     };
-    
     const autoGroups = {
         personal: { label: 'User Identity', text: 'Enter your basic profile information.' },
         account: { label: 'Security & Updates', text: 'Configure your communication settings.' }
     };
-
     const autoForm = new AutoForm(autoMeta);
     autoForm.groups = autoGroups;
     autoForm.render(initialData, document.getElementById('auto-form-container'));
     populateFields(document.getElementById('auto-form-container'), initialData);
 
-    // --- 3. WIZARD FORM ---
+    // --- 3. WIZARD ---
     const wizardMeta = {
         'user.name': { label: 'What is your name?', group: 'start', attributes: { required: 'required' } },
-        'user.bio': { label: 'Tell us about yourself (Ungrouped -> Default)' }, 
+        'user.dob': { label: 'When were you born? (Ungrouped -> Default)' }, 
         'preferences.theme': { label: 'Choose Theme', group: 'settings', componentType: 'select', options: ['light', 'dark'] },
         'status': { label: 'Final Status', group: 'finish', componentType: 'radio', options: ['single', 'married'] }
     };
-
     const wizardGroups = {
         start: { label: 'Step 1: Introduction', text: 'Your name is mandatory to proceed.' },
         settings: { label: 'Step 2: Preferences', text: 'Customize your experience.' },
         finish: { label: 'Step 3: Confirmation', text: 'Check your final status.' }
     };
-
     const wizard = new Wizard(wizardMeta);
     wizard.groups = wizardGroups;
-    wizard.onPageChange = (step) => { console.log(`Wizard page changed to index ${step.newIndex}`); };
+    wizard.onPageChange = (step) => {
+        const nextBtn = document.querySelector('button.wizard-nav[onclick*="next"]');
+        if (nextBtn) nextBtn.textContent = step.newIndex === step.total - 1 ? 'Done' : 'Next';
+    };
+    wizard.onDone = (data) => {
+        alert('Wizard Complete! Collected data: ' + JSON.stringify(data, null, 2));
+    };
     wizard.render(initialData, document.getElementById('wizard-form-container'));
     populateFields(document.getElementById('wizard-form-container'), initialData);
-    
     window.wizard = wizard;
 
     function updateOutput() {
